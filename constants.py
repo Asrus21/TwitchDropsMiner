@@ -248,6 +248,26 @@ class ClientType:
         ),
     )
 
+    @classmethod
+    def by_name(cls) -> dict[str, ClientInfo]:
+        return {
+            "SMARTBOX": cls.SMARTBOX,
+            "MOBILE_WEB": cls.MOBILE_WEB,
+            "ANDROID_APP": cls.ANDROID_APP,
+            "WEB": cls.WEB,
+        }
+
+
+# Twitch retires client IDs from time to time. In September 2026 the device code login
+# started answering "invalid client" for the Android app (and the website) client IDs.
+# The client in use is therefore a setting, and the login tries every known client
+# in this order until one is accepted.
+DEFAULT_CLIENT_TYPE: str = "SMARTBOX"
+CLIENT_TYPE_ORDER: tuple[str, ...] = ("SMARTBOX", "MOBILE_WEB", "ANDROID_APP", "WEB")
+# Campaign discovery over live channels (the campaigns list query is refused since Sep 2026)
+DISCOVERY_MAX_GAMES: int = 25
+DISCOVERY_CHANNELS_PER_GAME: int = 30
+
 
 class State(Enum):
     IDLE = auto()
