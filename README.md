@@ -11,9 +11,11 @@
 >    funcionou em `settings.json` (`client_type`). Logins antigos que ainda são válidos
 >    continuam funcionando, sem precisar logar de novo.
 > 2. **Campanhas** — a lista de campanhas (`ViewerDropsDashboard`) deixou de responder
->    para os clientes que o app consegue usar. Agora as campanhas são **descobertas pelos
->    canais ao vivo**: para cada jogo da sua lista de prioridade (e dos drops já em
->    andamento), o app pergunta aos canais quais drops estão disponíveis para a sua conta.
+>    para os clientes que o app consegue usar. Agora o app faz uma **varredura**: lista
+>    todos os streams ao vivo com drops ativados na Twitch (em duas passadas), e pergunta
+>    aos 3 canais mais assistidos de cada jogo quais drops estão disponíveis para a sua
+>    conta. Os jogos encontrados com drops ficam salvos em `drops_games.json` e são
+>    procurados de novo nas próximas varreduras. O resultado é reaproveitado por 30 minutos.
 > 3. **Progresso** — o progresso passou a contar só com a "visualização" da playlist
 >    do stream (já incluído desta versão em diante).
 >
@@ -24,12 +26,13 @@
 > **Como usar esta versão:**
 >
 > - Clique em **Login**, abra `twitch.tv/activate` e digite o código mostrado no app.
-> - Na aba **Settings**, **digite o nome do jogo** que você quer minerar na caixa ao lado
->   da lista de prioridade e adicione. Como a Twitch não lista mais as campanhas, é
->   esse nome que o app usa para procurar os drops. Use o nome como aparece na Twitch
->   (por exemplo, `Rust`, `Marvel Rivals`).
-> - Clique em **Reload**. Na saída aparece quantas campanhas foram encontradas
->   (com `--log`, procure pela linha `Campaign discovery:` no `log.txt`).
+> - Espere a varredura terminar (cerca de 30 segundos a 1 minuto). As campanhas
+>   encontradas aparecem na aba **Inventory**, e os jogos delas na lista de jogos da aba
+>   **Settings**.
+> - Na aba **Settings**, adicione à lista de prioridade os jogos que você quer minerar
+>   e clique em **Reload**. Para minerar tudo o que for possível, mude o **Priority Mode**.
+> - Com `--log`, a linha `Campaign discovery:` no `log.txt` mostra quantas campanhas
+>   foram encontradas, em quantos canais e jogos.
 > - Vincule sua conta da Twitch às contas dos jogos na
 >   [página de campanhas](https://www.twitch.tv/drops/campaigns).
 >

@@ -36,6 +36,8 @@ from utils import (
     timestamp,
     create_nonce,
     task_wrapper,
+    json_load,
+    json_save,
     RateLimiter,
     AwaitableValue,
     ExponentialBackoff,
@@ -55,7 +57,12 @@ from constants import (
     WebsocketTopic,
     CLIENT_TYPE_ORDER,
     DEFAULT_CLIENT_TYPE,
-    DISCOVERY_MAX_GAMES,
+    DROPS_GAMES_PATH,
+    DISCOVERY_SCAN_SORTS,
+    DISCOVERY_SCAN_PAGES,
+    DISCOVERY_CACHE_MINUTES,
+    DISCOVERY_REMEMBER_DAYS,
+    DISCOVERY_REMEMBERED_MAX,
     DISCOVERY_CHANNELS_PER_GAME,
 )
 
@@ -544,6 +551,8 @@ class Twitch:
         self.websocket = WebsocketPool(self)
         # Maintenance task
         self._mnt_task: asyncio.Task[None] | None = None
+        # Campaign discovery results: (timestamp, campaigns data)
+        self._discovery_cache: tuple[float, dict[str, JsonType]] | None = None
 
     def set_client_type(self, name: str) -> None:
         """
@@ -1739,7 +1748,8 @@ class Twitch:
         that has no drops available for the account doesn't progress anything.
         If no channel at all reports drops, nothing is changed (fail open).
         """
-        if not self.settings.available_drops_check:
+        # discovered campaigns rely on this check to pick the right channels
+        if not (self.settings.available_drops_check or self.settings.campaign_discovery):
             return
         online: list[Channel] = [channel for channel in channels if channel.online]
         if not online:
@@ -1828,15 +1838,67 @@ class Twitch:
             "timeBasedDrops": drops,
         }
 
-    async def discover_campaigns(self, known: dict[str, JsonType]) -> dict[str, JsonType]:
+    async def scan_drops_streams(self) -> dict[str, list[JsonType]]:
         """
-        Finds drop campaigns by asking the live channels of the relevant games about them.
+        Lists the live streams Twitch marks as drops-enabled, across every game.
 
-        Since September 2026 Twitch refuses the campaigns list query for the clients the
-        application can use, but each channel still reports the drops it offers. The games
-        searched are the ones in the priority list, plus the games of campaigns in progress.
+        Returns the most watched channels of each game, by game ID. The stream list is
+        public, so the request is made without the account's authorization.
         """
-        excluded: set[str] = {name.casefold() for name in self.settings.exclude}
+        game_channels: dict[str, list[JsonType]] = {}
+        headers = {
+            "Client-Id": self._client_type.CLIENT_ID,
+            "User-Agent": self._client_type.USER_AGENT,
+            "Content-Type": "application/json",
+        }
+        for sort in DISCOVERY_SCAN_SORTS:
+            cursor: str | None = None
+            for page in range(DISCOVERY_SCAN_PAGES):
+                after: str = f', after: {json.dumps(cursor)}' if cursor else ''
+                query: str = (
+                    "{ streams(first: 30%s, options: {systemFilters: [DROPS_ENABLED], "
+                    "sort: %s}) { edges { cursor node { game { id name displayName slug } "
+                    "broadcaster { id login displayName } } } pageInfo { hasNextPage } } }"
+                ) % (after, sort)
+                async with self._qgl_limiter:
+                    async with self.request(
+                        "POST", "https://gql.twitch.tv/gql", json={"query": query}, headers=headers
+                    ) as response:
+                        response_json: JsonType = await response.json()
+                streams: JsonType | None = (response_json.get("data") or {}).get("streams")
+                if response_json.get("errors") or not streams:
+                    raise MinerException(f"Drops scan failed: {response_json.get('errors')}")
+                edges: list[JsonType] = streams.get("edges") or []
+                for edge in edges:
+                    node: JsonType = edge.get("node") or {}
+                    game: JsonType | None = node.get("game")
+                    broadcaster: JsonType | None = node.get("broadcaster")
+                    if not game or not broadcaster:
+                        continue
+                    channels = game_channels.setdefault(str(game["id"]), [])
+                    # the first sort is by viewers, so the most watched channels come first
+                    if (
+                        len(channels) < DISCOVERY_CHANNELS_PER_GAME
+                        and all(c["id"] != str(broadcaster["id"]) for c in channels)
+                    ):
+                        channels.append({
+                            "id": str(broadcaster["id"]),
+                            "name": broadcaster["login"],
+                            "displayName": broadcaster.get("displayName") or broadcaster["login"],
+                            "gameName": game.get("displayName") or game.get("name") or "",
+                            "gameSlug": game.get("slug") or "",
+                        })
+                if not edges or not (streams.get("pageInfo") or {}).get("hasNextPage"):
+                    break
+                cursor = edges[-1].get("cursor")
+                if not cursor:
+                    break
+        return game_channels
+
+    async def _priority_game_channels(self, known: dict[str, JsonType]) -> dict[str, list[JsonType]]:
+        """
+        Fallback for the drops scan: the channels of the priority list and in-progress games.
+        """
         games: dict[str, Game] = {}
         for game_name in self.settings.priority:
             # only the slug made from the name is needed for the directory query
@@ -1845,48 +1907,171 @@ class Twitch:
             if campaign_data.get("game") is not None:
                 game = Game(campaign_data["game"])
                 games.setdefault(game.name.casefold(), game)
-        games = {key: game for key, game in games.items() if key not in excluded}
-        if not games:
-            return {}
-        self.gui.status.update(_("gui", "status", "fetching_campaigns"))
-        channels: dict[int, Channel] = {}
-        # limit how many games get searched, to keep the amount of requests reasonable
-        for game in list(games.values())[:DISCOVERY_MAX_GAMES]:
+        game_channels: dict[str, list[JsonType]] = {}
+        for key, game in games.items():
             try:
-                for channel in await self.get_live_streams(
-                    game, limit=DISCOVERY_CHANNELS_PER_GAME
-                ):
-                    channels[channel.id] = channel
+                live = await self.get_live_streams(game, limit=DISCOVERY_CHANNELS_PER_GAME)
             except MinerException:
                 logger.warning(f"Campaign discovery: unable to fetch the streams of {game.name}")
-        if not channels:
-            return {}
-        available = await self.fetch_available_drops(channels)
-        discovered: dict[str, JsonType] = {}
-        for channel_id, campaigns_data in available.items():
-            if channel_id not in channels:
                 continue
-            seen_on: Channel = channels[channel_id]
+            game_channels[key] = [
+                {
+                    "id": str(channel.id),
+                    "name": channel._login,
+                    "displayName": channel._display_name or channel._login,
+                    "gameName": game.name,
+                }
+                for channel in live
+            ]
+        return game_channels
+
+    def _load_drops_games(self) -> JsonType:
+        """
+        Loads the games found with drops before, dropping the ones not seen for a while.
+        """
+        try:
+            remembered: JsonType = json_load(DROPS_GAMES_PATH, {}, merge=False)
+        except (OSError, ValueError):
+            return {}
+        cutoff = datetime.now(timezone.utc) - timedelta(days=DISCOVERY_REMEMBER_DAYS)
+        kept: JsonType = {}
+        for game_id, entry in remembered.items():
+            try:
+                if datetime.fromisoformat(entry["seen"]) >= cutoff and entry["name"]:
+                    kept[str(game_id)] = entry
+            except (KeyError, TypeError, ValueError):
+                continue
+        return kept
+
+    def _save_drops_games(self, remembered: JsonType) -> None:
+        try:
+            json_save(DROPS_GAMES_PATH, remembered, sort=True)
+        except OSError as exc:
+            logger.warning(f"Unable to save the games with drops: {exc}")
+
+    async def _add_remembered_games(
+        self, game_channels: dict[str, list[JsonType]], remembered: JsonType
+    ) -> None:
+        """
+        Looks up the channels of games that had drops before, but the scan didn't list.
+        """
+        missing = [
+            (game_id, entry) for game_id, entry in remembered.items()
+            if game_id not in game_channels
+        ]
+        # the most recently seen first
+        missing.sort(key=lambda item: item[1]["seen"], reverse=True)
+        for game_id, entry in missing[:DISCOVERY_REMEMBERED_MAX]:
+            game_data: JsonType = {"id": game_id, "name": entry["name"]}
+            if entry.get("slug"):
+                game_data["slug"] = entry["slug"]
+            game = Game(game_data)
+            try:
+                live = await self.get_live_streams(game, limit=DISCOVERY_CHANNELS_PER_GAME)
+            except MinerException:
+                continue
+            if live:
+                game_channels[game_id] = [
+                    {
+                        "id": str(channel.id),
+                        "name": channel._login,
+                        "displayName": channel._display_name or channel._login,
+                        "gameName": entry["name"],
+                        "gameSlug": entry.get("slug") or "",
+                    }
+                    for channel in live
+                ]
+
+    async def discover_campaigns(self, known: dict[str, JsonType]) -> dict[str, JsonType]:
+        """
+        Finds the drop campaigns available to the account by asking live channels about them.
+
+        Since September 2026 Twitch refuses the campaigns list query for the clients the
+        application can use, but each channel still reports the drops it offers the account.
+        Every live drops-enabled stream on Twitch is listed, and the most watched channels of
+        each game are asked about their drops. Results are reused for a while, to keep the
+        amount of requests down.
+        """
+        now: float = time()
+        if self._discovery_cache is not None and now - self._discovery_cache[0] < (
+            DISCOVERY_CACHE_MINUTES * 60
+        ):
+            cached: dict[str, JsonType] = self._discovery_cache[1]
+            return {cid: deepcopy(data) for cid, data in cached.items() if cid not in known}
+        self.gui.status.update(_("gui", "status", "fetching_campaigns"))
+        try:
+            game_channels = await self.scan_drops_streams()
+        except (MinerException, KeyError, TypeError, ValueError) as exc:
+            logger.warning(f"{exc} - searching the priority list games only")
+            game_channels = await self._priority_game_channels(known)
+        remembered: JsonType = self._load_drops_games()
+        await self._add_remembered_games(game_channels, remembered)
+        excluded: set[str] = {name.casefold() for name in self.settings.exclude}
+        channel_info: dict[int, JsonType] = {}
+        channel_game: dict[int, str] = {}
+        for game_key, channels_data in game_channels.items():
+            for channel_data in channels_data:
+                if channel_data["gameName"].casefold() in excluded:
+                    continue
+                channel_id = int(channel_data["id"])
+                channel_info[channel_id] = channel_data
+                channel_game[channel_id] = game_key
+        if not channel_info:
+            return {}
+        available = await self.fetch_available_drops(channel_info)
+        discovered: dict[str, JsonType] = {}
+        seen_on: dict[str, set[int]] = {}
+        for channel_id, campaigns_data in available.items():
+            if channel_id not in channel_info:
+                continue
             for campaign_data in campaigns_data:
                 campaign_id: str | None = campaign_data.get("id")
-                if not campaign_id or campaign_id in known:
+                if not campaign_id:
                     continue
                 if campaign_id not in discovered:
                     converted = self._campaign_from_available(campaign_data, known)
                     if converted is None:
                         continue
+                    if converted["game"]["name"].casefold() in excluded:
+                        continue
+                    # use Twitch's own URL name of the game, when the scan provided it
+                    slug: str = channel_info[channel_id].get("gameSlug") or ""
+                    if slug and channel_game[channel_id] == str(converted["game"]["id"]):
+                        converted["game"]["slug"] = slug
                     discovered[campaign_id] = converted
-                # remember the channels the campaign was seen on
-                discovered[campaign_id]["allow"]["channels"].append({
-                    "id": str(seen_on.id),
-                    "name": seen_on._login,
-                    "displayName": seen_on._display_name or seen_on._login,
-                })
+                    seen_on[campaign_id] = set()
+                seen_on[campaign_id].add(channel_id)
+        for campaign_id, seen in seen_on.items():
+            # Twitch doesn't tell if a campaign is limited to some channels. If it showed
+            # up on every channel asked for that game, assume it's game-wide (no limit),
+            # otherwise limit it to the channels it showed up on.
+            asked: set[int] = {
+                channel_id
+                for channel_id, game_key in channel_game.items()
+                if game_key in {channel_game[seen_id] for seen_id in seen}
+            }
+            if len(asked) > 1 and seen != asked:
+                discovered[campaign_id]["allow"]["channels"] = [
+                    {key: channel_info[channel_id][key] for key in ("id", "name", "displayName")}
+                    for channel_id in sorted(seen)
+                ]
+        # remember the games with drops, so the next scans look them up even when
+        # Twitch's stream list leaves them out
+        seen_at: str = datetime.now(timezone.utc).isoformat()
+        for data in discovered.values():
+            game_data: JsonType = data["game"]
+            remembered[str(game_data["id"])] = {
+                "name": game_data["name"],
+                "slug": game_data.get("slug") or Game(game_data).slug,
+                "seen": seen_at,
+            }
+        self._save_drops_games(remembered)
+        self._discovery_cache = (now, deepcopy(discovered))
         logger.info(
-            f"Campaign discovery: {len(discovered)} new campaign(s) found "
-            f"on {len(channels)} live channel(s) of {len(games)} game(s)"
+            f"Campaign discovery: {len(discovered)} campaign(s) found on "
+            f"{len(channel_info)} live channel(s) of {len(game_channels)} game(s)"
         )
-        return discovered
+        return {cid: data for cid, data in discovered.items() if cid not in known}
 
     async def bulk_check_online(self, channels: abc.Iterable[Channel]):
         """

@@ -107,6 +107,7 @@ CACHE_PATH = Path(WORKING_DIR, "cache")
 CACHE_DB = Path(CACHE_PATH, "mapping.json")
 COOKIES_PATH = Path(WORKING_DIR, "cookies.jar")
 SETTINGS_PATH = Path(WORKING_DIR, "settings.json")
+DROPS_GAMES_PATH = Path(WORKING_DIR, "drops_games.json")
 # Typing
 JsonType = Dict[str, Any]
 URLType = NewType("URLType", str)
@@ -265,8 +266,14 @@ class ClientType:
 DEFAULT_CLIENT_TYPE: str = "SMARTBOX"
 CLIENT_TYPE_ORDER: tuple[str, ...] = ("SMARTBOX", "MOBILE_WEB", "ANDROID_APP", "WEB")
 # Campaign discovery over live channels (the campaigns list query is refused since Sep 2026)
-DISCOVERY_MAX_GAMES: int = 25
-DISCOVERY_CHANNELS_PER_GAME: int = 30
+# Twitch's stream list returns a different subset on every pass, so it's walked in two
+# orders, and the games found with drops are remembered and looked up on later scans.
+DISCOVERY_SCAN_SORTS: tuple[str, ...] = ("VIEWER_COUNT", "RECENT")
+DISCOVERY_SCAN_PAGES: int = 100  # per sort order, 30 streams per page
+DISCOVERY_CHANNELS_PER_GAME: int = 3  # channels of each game asked about their drops
+DISCOVERY_CACHE_MINUTES: int = 30
+DISCOVERY_REMEMBER_DAYS: int = 14  # how long a game that had drops keeps being looked up
+DISCOVERY_REMEMBERED_MAX: int = 60  # max. remembered games looked up directly per scan
 
 
 class State(Enum):
