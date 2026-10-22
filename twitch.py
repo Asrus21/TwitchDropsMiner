@@ -1731,7 +1731,12 @@ class Twitch:
         ]
         available: dict[int, list[JsonType]] = {}
         for ops_chunk in chunk(ops, 20):
-            response_list: list[JsonType] = await self.gql_request(ops_chunk)
+            try:
+                response_list: list[JsonType] = await self.gql_request(ops_chunk)
+            except GQLException as exc:
+                # one failed batch shouldn't lose the answers of all the others
+                logger.warning(f"Available drops: a batch of channels failed: {exc}")
+                continue
             for response_json in response_list:
                 channel_data: JsonType | None = (response_json.get("data") or {}).get("channel")
                 if channel_data is not None:
@@ -1766,14 +1771,25 @@ class Twitch:
             channel.update_available_drops(available.get(channel.id, []))
 
     def _campaign_from_available(
-        self, campaign_data: JsonType, known: dict[str, JsonType]
+        self,
+        campaign_data: JsonType,
+        known: dict[str, JsonType],
+        skipped: dict[str, int] | None = None,
     ) -> JsonType | None:
         """
         Converts a campaign reported by the available drops query into the inventory format.
+
+        Missing drop details are filled in from the campaign. Drops that can't be earned by
+        watching (no watch time, or subscriptions required) are left out. When a campaign
+        can't be used, the reason is counted in `skipped`.
         """
+        def skip(reason: str) -> None:
+            if skipped is not None:
+                skipped[reason] = skipped.get(reason, 0) + 1
+
         game_data: JsonType | None = campaign_data.get("game")
-        drops_data: list[JsonType] = campaign_data.get("timeBasedDrops") or []
-        if not game_data or "id" not in game_data or not drops_data:
+        if not game_data or "id" not in game_data:
+            skip("no game")
             return None
         game_name: str = game_data.get("displayName") or game_data.get("name") or ""
         # keep the spelling from the priority list, since the game matching uses names
@@ -1795,34 +1811,47 @@ class Twitch:
             ):
                 linked = bool(known_data["self"].get("isAccountConnected", True))
                 break
+        campaign_name: str = campaign_data.get("name") or game_name
+        campaign_start: str = (
+            # in the same format as Twitch's own dates, which the campaign parser expects
+            campaign_data.get("startAt")
+            or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+        campaign_end: str | None = campaign_data.get("endAt")
         drops: list[JsonType] = []
-        for drop_data in drops_data:
-            if not all(
-                key in drop_data
-                for key in ("id", "name", "startAt", "endAt", "requiredMinutesWatched")
-            ):
-                return None
+        for drop_data in campaign_data.get("timeBasedDrops") or []:
+            required_minutes: int = drop_data.get("requiredMinutesWatched") or 0
+            if not drop_data.get("id") or required_minutes <= 0 or drop_data.get("requiredSubs"):
+                continue  # not earnable by watching
+            drop_end: str | None = drop_data.get("endAt") or campaign_end
+            if drop_end is None:
+                continue
+            drop_name: str = drop_data.get("name") or campaign_name
             benefit_edges: list[JsonType] = []
             for edge in drop_data.get("benefitEdges") or []:
                 benefit: JsonType = dict(edge.get("benefit") or {})
                 if "id" not in benefit:
                     continue
-                benefit.setdefault("name", drop_data["name"])
+                benefit.setdefault("name", drop_name)
                 benefit.setdefault("distributionType", "UNKNOWN")
-                benefit.setdefault("imageAssetURL", box_art)
+                if not benefit.get("imageAssetURL"):
+                    benefit["imageAssetURL"] = box_art
                 benefit_edges.append({**edge, "benefit": benefit})
             drops.append({
                 "id": drop_data["id"],
-                "name": drop_data["name"],
-                "startAt": drop_data["startAt"],
-                "endAt": drop_data["endAt"],
-                "requiredMinutesWatched": drop_data["requiredMinutesWatched"],
+                "name": drop_name,
+                "startAt": drop_data.get("startAt") or campaign_start,
+                "endAt": drop_end,
+                "requiredMinutesWatched": required_minutes,
                 "preconditionDrops": drop_data.get("preconditionDrops"),
                 "benefitEdges": benefit_edges,
             })
+        if not drops:
+            skip("no drops earnable by watching")
+            return None
         return {
             "id": campaign_data["id"],
-            "name": campaign_data.get("name") or game_name,
+            "name": campaign_name,
             "game": {
                 "id": game_data["id"],
                 "name": game_name,
@@ -1832,7 +1861,7 @@ class Twitch:
             "self": {"isAccountConnected": linked},
             "accountLinkURL": campaign_data.get("detailsURL") or "",
             "startAt": min(drop["startAt"] for drop in drops),
-            "endAt": campaign_data.get("endAt") or max(drop["endAt"] for drop in drops),
+            "endAt": campaign_end or max(drop["endAt"] for drop in drops),
             "status": "ACTIVE",
             "allow": {"channels": [], "isEnabled": True},
             "timeBasedDrops": drops,
@@ -2021,6 +2050,8 @@ class Twitch:
         available = await self.fetch_available_drops(channel_info)
         discovered: dict[str, JsonType] = {}
         seen_on: dict[str, set[int]] = {}
+        skipped: dict[str, int] = {}
+        rejected: set[str] = set()
         for channel_id, campaigns_data in available.items():
             if channel_id not in channel_info:
                 continue
@@ -2028,11 +2059,16 @@ class Twitch:
                 campaign_id: str | None = campaign_data.get("id")
                 if not campaign_id:
                     continue
+                if campaign_id in rejected:
+                    continue
                 if campaign_id not in discovered:
-                    converted = self._campaign_from_available(campaign_data, known)
+                    converted = self._campaign_from_available(campaign_data, known, skipped)
                     if converted is None:
+                        rejected.add(campaign_id)
                         continue
                     if converted["game"]["name"].casefold() in excluded:
+                        rejected.add(campaign_id)
+                        skipped["excluded game"] = skipped.get("excluded game", 0) + 1
                         continue
                     # use Twitch's own URL name of the game, when the scan provided it
                     slug: str = channel_info[channel_id].get("gameSlug") or ""
@@ -2067,9 +2103,18 @@ class Twitch:
             }
         self._save_drops_games(remembered)
         self._discovery_cache = (now, deepcopy(discovered))
+        answered: int = sum(1 for campaigns_data in available.values() if campaigns_data)
+        found_games: int = len({str(data["game"]["id"]) for data in discovered.values()})
+        skipped_text: str = ", ".join(f"{reason}: {n}" for reason, n in sorted(skipped.items()))
         logger.info(
-            f"Campaign discovery: {len(discovered)} campaign(s) found on "
-            f"{len(channel_info)} live channel(s) of {len(game_channels)} game(s)"
+            f"Campaign discovery: {len(discovered)} campaign(s) of {found_games} game(s) found. "
+            f"Scanned {len(game_channels)} game(s), asked {len(channel_info)} channel(s), "
+            f"{len(available)} answered, {answered} with drops. "
+            f"Skipped campaigns: {skipped_text or 'none'}"
+        )
+        self.print(
+            f"Drops scan: {len(discovered)} campaign(s) of {found_games} game(s) found, "
+            f"{len(channel_info)} channel(s) of {len(game_channels)} game(s) checked"
         )
         return {cid: data for cid, data in discovered.items() if cid not in known}
 
