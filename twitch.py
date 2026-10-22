@@ -433,7 +433,7 @@ class _AuthState:
                 if response.status == 401:
                     return None
                 elif response.status == 200:
-                    return cast(JsonType, await response.json())
+                    return cast("JsonType", await response.json())
                 logger.info(f"Token validation returned HTTP {response.status}")
         raise RuntimeError("Login verification failure: unexpected validation response")
 
