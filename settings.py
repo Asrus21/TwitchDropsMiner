@@ -25,6 +25,7 @@ class SettingsFile(TypedDict):
     priority_mode: PriorityMode
     client_type: str
     campaign_discovery: bool
+    check_updates: bool
 
 
 default_settings: SettingsFile = {
@@ -41,6 +42,7 @@ default_settings: SettingsFile = {
     "priority_mode": PriorityMode.PRIORITY_ONLY,
     "client_type": DEFAULT_CLIENT_TYPE,
     "campaign_discovery": True,
+    "check_updates": True,
 }
 
 
@@ -67,6 +69,7 @@ class Settings:
     priority_mode: PriorityMode
     client_type: str
     campaign_discovery: bool
+    check_updates: bool
 
     PASSTHROUGH = ("_settings", "_args", "_altered")
 

@@ -225,6 +225,22 @@ class GUIMessages(TypedDict):
     help: GUIHelp
 
 
+class UpdateMessages(TypedDict):
+    title: str
+    available: str
+    changes: str
+    download: str
+    later: str
+    downloading: str
+    download_failed: str
+    verify_failed: str
+    downloaded: str
+    install: str
+    open_page: str
+    manual: str
+    installing: str
+
+
 class Translation(TypedDict):
     language_name: NotRequired[str]
     english_name: str
@@ -232,6 +248,7 @@ class Translation(TypedDict):
     login: LoginMessages
     error: ErrorMessages
     gui: GUIMessages
+    update: UpdateMessages
 
 
 default_translation: Translation = {
@@ -446,6 +463,21 @@ default_translation: Translation = {
             },
         },
     },
+    "update": {
+        "title": "Update available",
+        "available": "Version {new} is available (you have {current}).",
+        "changes": "What changed:",
+        "download": "Download",
+        "later": "Not now",
+        "downloading": "Downloading the update... {percent}",
+        "download_failed": "The update couldn't be downloaded: {error}",
+        "verify_failed": "The downloaded file didn't match the release checksum, so it was discarded.",
+        "downloaded": "Version {new} has been downloaded. Install it now? The app will close and reopen.",
+        "install": "Install",
+        "open_page": "Open the download page",
+        "manual": "This copy can't update itself (it isn't the Windows executable). Download the new version from the releases page.",
+        "installing": "Installing the update, the app will reopen...",
+    }
 }
 
 
