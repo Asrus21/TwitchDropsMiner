@@ -23,6 +23,13 @@
 > a sua conta (`available_drops_check`). Se nenhum canal informar drops, essa checagem é
 > ignorada para não deixar o app parado.
 >
+> **Como baixar e atualizar:** baixe o `TwitchDropsMiner.exe` (portátil, é só abrir) na
+> [página de Releases](https://github.com/Asrus21/TwitchDropsMiner/releases/latest). Depois
+> disso não precisa voltar ao GitHub: quando sair uma versão nova, o próprio app avisa,
+> mostra o que mudou, baixa e pergunta se quer instalar. O histórico de mudanças fica no
+> [CHANGELOG.md](CHANGELOG.md). Prefere usar pelo navegador? Tem também a versão web em
+> [asrus.app/twitch-drops-miner](https://www.asrus.app/twitch-drops-miner).
+>
 > **Como usar esta versão:**
 >
 > - Clique em **Login**, abra `twitch.tv/activate` e digite o código mostrado no app.

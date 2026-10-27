@@ -155,5 +155,20 @@
             "getting_started": "Iniciando",
             "getting_started_text": "1. Autentique-se no app com a sua conta da Twitch.\n2. Certifique-se que todas campanhas estão conectadas com as contas dos respectivos aplicativos.\n3. Se quiser coletar tudo, desmarque \"Apenas com Prioridade\" e clique em \"Recarregar\".\n4. Se quiser coletar apenas de certos jogos, use a lista \"Prioridade\" para configurar a lista de jogos que você quer coletar. A lista segue a ordem que é apresentada, do primeiro ao último, sendo assim, a coleta continuará para os jogos seguintes assim que o jogo anterior esteja completo.\n5. Mantenha a opção \"Priority only\" ativa, para evitar que a coleta ocorra em jogos que não estão na lista de prioridades. Ou não - você quem manda.\n6. Use a lista \"Excluir\" para jogos que NUNCA devam ser coletados.\n7. Qualquer mudança feita nas listas requer que você clique no botão \"Recarregar\" para que as mudanças tenham efeito."
         }
+    },
+    "update": {
+        "title": "Atualização disponível",
+        "available": "A versão {new} está disponível (você tem a {current}).",
+        "changes": "O que mudou:",
+        "download": "Baixar",
+        "later": "Agora não",
+        "downloading": "Baixando a atualização... {percent}",
+        "download_failed": "Não deu para baixar a atualização: {error}",
+        "verify_failed": "O arquivo baixado não bate com o checksum do release, então foi descartado.",
+        "downloaded": "A versão {new} foi baixada. Instalar agora? O app vai fechar e abrir de novo.",
+        "install": "Instalar",
+        "open_page": "Abrir a página de download",
+        "manual": "Esta cópia não se atualiza sozinha (não é o executável do Windows). Baixe a versão nova na página de releases.",
+        "installing": "Instalando a atualização, o app vai abrir de novo..."
     }
 }

@@ -41,11 +41,49 @@ jobs:
             exit 1
           fi
 
+  # Decides whether this run publishes a release: a push to master (or a manual run)
+  # whose version.py version has no release yet, and a CHANGELOG.md section for it.
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+    outputs:
+      version: ${{steps.check.outputs.version}}
+      release: ${{steps.check.outputs.release}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check the version and the changelog
+        id: check
+        env:
+          GH_TOKEN: ${{github.token}}
+        run: |
+          VERSION="$(python3 -c 'from version import __version__ as v; print(v)')"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          RELEASE=false
+          if [ "${{github.event_name}}" != "pull_request" ] && [ "${{github.ref}}" = "refs/heads/master" ]; then
+            if ! [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Version ${VERSION} isn't a release version (X.Y.Z), not publishing"
+            elif gh release view "v${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+              echo "Release v${VERSION} already exists, not publishing"
+            elif ! grep -q "^## \[${VERSION}\]" CHANGELOG.md; then
+              echo "::error::CHANGELOG.md has no section for ${VERSION}"
+              exit 1
+            else
+              RELEASE=true
+            fi
+          fi
+          echo "release=${RELEASE}" >> "${GITHUB_OUTPUT}"
+          echo "Version ${VERSION}, release: ${RELEASE}"
+
   windows:
     name: Windows
     runs-on: windows-latest
     needs:
-      - validate
+      - version
 
     steps:
       - name: Checkout code
@@ -57,6 +95,7 @@ jobs:
           Add-Content $env:GITHUB_OUTPUT "sha_short=$(git rev-parse --short HEAD)"
 
       - name: Append git revision to project version
+        if: needs.version.outputs.release != 'true'
         run: |
           (Get-Content version.py) `
           -Replace '^__version__\s*=\s*"[^"]+', "`$0.${{steps.vars.outputs.sha_short}}" |`
@@ -98,13 +137,17 @@ jobs:
           Copy-Item dist\*.exe $FolderName
           Copy-Item manual.txt $FolderName
           Compress-Archive -Path $FolderName -DestinationPath Twitch.Drops.Miner.Windows.zip
+          # the bare executable is what the in-app updater downloads (see updater.py)
+          Copy-Item (Get-ChildItem dist\*.exe | Select-Object -First 1).FullName TwitchDropsMiner.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Twitch.Drops.Miner.Windows
-          path: Twitch.Drops.Miner.Windows.zip
+          path: |
+            Twitch.Drops.Miner.Windows.zip
+            TwitchDropsMiner.exe
 
   macos:
     name: macOS
@@ -304,54 +347,63 @@ jobs:
           name: Twitch.Drops.Miner.Linux.AppImage-${{matrix.arch}}
           path: Twitch.Drops.Miner.Linux.AppImage-${{matrix.arch}}.zip
 
-  update_releases_page:
-    name: Upload builds to Releases
-    if: github.event_name != 'pull_request'
+  release:
+    name: Publish the release
+    if: needs.version.outputs.release == 'true'
     needs:
+      - version
       - windows
-      - linux-pyinstaller
-      - linux-appimage
-      - macos
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Set up variables
-        id: vars
-        run: |
-          echo "date_now=$(date --rfc-3339=seconds)" >> "${GITHUB_OUTPUT}"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Download build artifacts from previous jobs
+      - name: Download the Windows build
         uses: actions/download-artifact@v4
         with:
+          name: Twitch.Drops.Miner.Windows
           path: artifacts
 
-      - name: Delete the existing pre-release (if present)
-        run: |
-          TAG=dev-build
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY"
-          else
-            echo "No $TAG release; skipping delete"
-          fi
+      - name: Take the release notes from the changelog
         env:
-          GITHUB_TOKEN: ${{github.token}}
+          VERSION: ${{needs.version.outputs.version}}
+        run: |
+          # everything under "## [VERSION]" up to the next "## [" heading
+          awk -v v="## [${VERSION}]" '
+            index($0, v) == 1 { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
 
-      - name: Create a new dev build release
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: artifacts/*/*
-          body: |
-            **This is an automatically generated in-development pre-release version of the application, that includes the latest master branch changes.**
-            **⚠️ This build is not stable and may end up terminating with a fatal error. ⚠️**
-            **Use at your own risk.**
+          ---
+          **Como instalar:** baixe o `TwitchDropsMiner.exe` (portátil, é só abrir) ou o `.zip` (o mesmo executável com o manual).
+          Quem já usa o app é avisado da atualização dentro dele.
+          EOF
+          cat notes.md
 
-            - Last build date: `${{steps.vars.outputs.date_now}}`
-            - Reference commit: ${{github.sha}}
-          name: Development build
-          prerelease: true
-          removeArtifacts: true
-          tag: dev-build
+      - name: Remove the old automatic pre-release
+        env:
+          GH_TOKEN: ${{github.token}}
+        run: |
+          # the "dev-build" pre-release came from the previous workflow; releases replace it
+          if gh release view dev-build --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release delete dev-build --cleanup-tag --yes --repo "${GITHUB_REPOSITORY}"
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{github.token}}
+          VERSION: ${{needs.version.outputs.version}}
+        run: |
+          gh release create "v${VERSION}" \
+            artifacts/TwitchDropsMiner.exe \
+            artifacts/Twitch.Drops.Miner.Windows.zip \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "v${VERSION}" \
+            --notes-file notes.md \
+            --latest

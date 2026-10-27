@@ -24,6 +24,7 @@ if __name__ == "__main__":
 
     from translate import _
     from twitch import Twitch
+    from updater import Updater, cleanup_leftovers
     from settings import Settings
     from version import __version__
     from exceptions import CaptchaRequired
@@ -159,6 +160,9 @@ if __name__ == "__main__":
 
         exit_status = 0
         client = Twitch(settings)
+        # checks GitHub for a new release and offers to install it (see updater.py)
+        cleanup_leftovers()
+        update_task = asyncio.create_task(Updater(client).run())
         loop = asyncio.get_running_loop()
         if sys.platform == "linux":
             loop.add_signal_handler(signal.SIGINT, lambda *_: client.gui.close())
@@ -175,6 +179,7 @@ if __name__ == "__main__":
             client.print("Fatal error encountered:\n")
             client.print(traceback.format_exc())
         finally:
+            update_task.cancel()
             if sys.platform == "linux":
                 loop.remove_signal_handler(signal.SIGINT)
                 loop.remove_signal_handler(signal.SIGTERM)
