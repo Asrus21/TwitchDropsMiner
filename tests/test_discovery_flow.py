@@ -13,7 +13,6 @@ from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from typing import Any
 
-import pytest
 
 import twitch as twitch_module
 from twitch import Twitch
