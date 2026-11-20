@@ -26,6 +26,7 @@ class SettingsFile(TypedDict):
     client_type: str
     campaign_discovery: bool
     check_updates: bool
+    campaign_source: str
 
 
 default_settings: SettingsFile = {
@@ -39,10 +40,11 @@ default_settings: SettingsFile = {
     "tray_notifications": True,
     "enable_badges_emotes": False,
     "available_drops_check": True,
-    "priority_mode": PriorityMode.PRIORITY_ONLY,
+    "priority_mode": PriorityMode.ENDING_SOONEST,
     "client_type": DEFAULT_CLIENT_TYPE,
     "campaign_discovery": True,
     "check_updates": True,
+    "campaign_source": "auto",
 }
 
 
@@ -70,6 +72,7 @@ class Settings:
     client_type: str
     campaign_discovery: bool
     check_updates: bool
+    campaign_source: str
 
     PASSTHROUGH = ("_settings", "_args", "_altered")
 
