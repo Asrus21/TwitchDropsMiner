@@ -1,0 +1,72 @@
+{
+ "data": {
+  "channel": {
+   "id": "900001",
+   "viewerDropCampaigns": [
+    {
+     "id": "c-lol",
+     "name": "League Drops (channel view)",
+     "endAt": "2026-12-01T00:00:00Z",
+     "detailsURL": "",
+     "game": {
+      "id": "21779",
+      "name": "League of Legends",
+      "displayName": "League of Legends"
+     },
+     "timeBasedDrops": [
+      {
+       "id": "d-lol-1",
+       "name": "Icon",
+       "startAt": "2026-11-01T00:00:00Z",
+       "endAt": "2026-12-01T00:00:00Z",
+       "requiredMinutesWatched": 60,
+       "preconditionDrops": null,
+       "benefitEdges": [
+        {
+         "benefit": {
+          "id": "b-d-lol-1",
+          "name": "Icon",
+          "imageAssetURL": "",
+          "distributionType": "DIRECT_ENTITLEMENT"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "c-scan-only",
+     "name": "Found by the scan",
+     "endAt": "2026-11-30T00:00:00Z",
+     "detailsURL": "",
+     "game": {
+      "id": "21779",
+      "name": "League of Legends",
+      "displayName": "League of Legends"
+     },
+     "timeBasedDrops": [
+      {
+       "id": "d-scan-1",
+       "name": "Ward",
+       "startAt": "2026-11-01T00:00:00Z",
+       "endAt": "2026-11-30T00:00:00Z",
+       "requiredMinutesWatched": 120,
+       "preconditionDrops": null,
+       "benefitEdges": [
+        {
+         "benefit": {
+          "id": "b-d-scan-1",
+          "name": "Ward",
+          "imageAssetURL": "",
+          "distributionType": "DIRECT_ENTITLEMENT"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "__typename": "Channel"
+  }
+ }
+}

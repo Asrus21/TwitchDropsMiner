@@ -1,0 +1,15 @@
+[
+ {
+  "data": {
+   "game": {
+    "id": "490655",
+    "slug": "pokemon-go",
+    "__typename": "Game"
+   }
+  },
+  "extensions": {
+   "durationMilliseconds": 6,
+   "operationName": "DirectoryGameRedirect"
+  }
+ }
+]
