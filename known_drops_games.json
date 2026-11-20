@@ -1,0 +1,481 @@
+{
+    "_comment": "Fallback list of games with Drops campaigns, used only when both the official campaigns list and the live channel scan fail. Captured from twitch.tv/drops/campaigns on 2026-11-20; game IDs and slugs checked against Twitch the same day. ends_at is only known for some entries; entries past it are skipped, and the whole list stops being used after max_age_days.",
+    "captured_at": "2026-11-20T00:00:00Z",
+    "max_age_days": 45,
+    "games": [
+        {
+            "name": "Monster Hunter Outlanders",
+            "id": "558633344",
+            "slug": "monster-hunter-outlanders",
+            "ends_at": null
+        },
+        {
+            "name": "Overwatch",
+            "id": "515025",
+            "slug": "overwatch-2",
+            "ends_at": null
+        },
+        {
+            "name": "Shroud of the Avatar: Forsaken Virtues",
+            "id": "130976",
+            "slug": "shroud-of-the-avatar-forsaken-virtues",
+            "ends_at": null
+        },
+        {
+            "name": "Infinity Nikki",
+            "id": "2014795392",
+            "slug": "infinity-nikki",
+            "ends_at": null
+        },
+        {
+            "name": "ELDEN RING",
+            "id": "512953",
+            "slug": "elden-ring",
+            "ends_at": null
+        },
+        {
+            "name": "Coin Pusher Live",
+            "id": "1426040084",
+            "slug": "coin-pusher-live",
+            "ends_at": null
+        },
+        {
+            "name": "Predecessor",
+            "id": "511295",
+            "slug": "predecessor",
+            "ends_at": null
+        },
+        {
+            "name": "Wolvesville",
+            "id": "615993466",
+            "slug": "wolvesville",
+            "ends_at": null
+        },
+        {
+            "name": "Genshin Impact",
+            "id": "513181",
+            "slug": "genshin-impact",
+            "ends_at": null
+        },
+        {
+            "name": "Brawlhalla",
+            "id": "460316",
+            "slug": "brawlhalla",
+            "ends_at": null
+        },
+        {
+            "name": "World of Warcraft",
+            "id": "18122",
+            "slug": "world-of-warcraft",
+            "ends_at": null
+        },
+        {
+            "name": "FragPunk",
+            "id": "1023750977",
+            "slug": "fragpunk",
+            "ends_at": null
+        },
+        {
+            "name": "NARAKA: BLADEPOINT",
+            "id": "515474",
+            "slug": "naraka-bladepoint",
+            "ends_at": null
+        },
+        {
+            "name": "Blue Protocol: Star Resonance",
+            "id": "266795834",
+            "slug": "star-resonance",
+            "ends_at": null
+        },
+        {
+            "name": "Cash is King! Business Simulator",
+            "id": "1979426071",
+            "slug": "cash-is-king",
+            "ends_at": null
+        },
+        {
+            "name": "Call of Duty: Warzone",
+            "id": "512710",
+            "slug": "call-of-duty-warzone",
+            "ends_at": "2026-11-21T02:59:59Z"
+        },
+        {
+            "name": "PAYDAY 3",
+            "id": "2113043143",
+            "slug": "payday-3",
+            "ends_at": null
+        },
+        {
+            "name": "League of Legends",
+            "id": "21779",
+            "slug": "league-of-legends",
+            "ends_at": null
+        },
+        {
+            "name": "Delta Force",
+            "id": "3948",
+            "slug": "delta-force",
+            "ends_at": null
+        },
+        {
+            "name": "Honkai: Star Rail",
+            "id": "213930085",
+            "slug": "honkai-star-rail",
+            "ends_at": null
+        },
+        {
+            "name": "NTE: Neverness to Everness",
+            "id": "1901865180",
+            "slug": "neverness-to-everness",
+            "ends_at": null
+        },
+        {
+            "name": "Modern Warships",
+            "id": "423797288",
+            "slug": "modern-warships",
+            "ends_at": null
+        },
+        {
+            "name": "Wuthering Waves",
+            "id": "209738946",
+            "slug": "wuthering-waves",
+            "ends_at": null
+        },
+        {
+            "name": "WARDOGS",
+            "id": "743893402",
+            "slug": "wardogs",
+            "ends_at": null
+        },
+        {
+            "name": "THE FINALS",
+            "id": "1910103699",
+            "slug": "the-finals",
+            "ends_at": null
+        },
+        {
+            "name": "Captain's Call",
+            "id": "856072301",
+            "slug": "captains-call",
+            "ends_at": null
+        },
+        {
+            "name": "Metin2",
+            "id": "31336",
+            "slug": "metin2",
+            "ends_at": null
+        },
+        {
+            "name": "Marvel Rivals",
+            "id": "1264310518",
+            "slug": "marvel-rivals",
+            "ends_at": null
+        },
+        {
+            "name": "Where Winds Meet",
+            "id": "1630982727",
+            "slug": "where-winds-meet",
+            "ends_at": null
+        },
+        {
+            "name": "Star Citizen",
+            "id": "71375",
+            "slug": "star-citizen",
+            "ends_at": null
+        },
+        {
+            "name": "BitCraft Online",
+            "id": "1795884306",
+            "slug": "bitcraft",
+            "ends_at": null
+        },
+        {
+            "name": "Path of Exile",
+            "id": "29307",
+            "slug": "path-of-exile",
+            "ends_at": null
+        },
+        {
+            "name": "SMITE 2",
+            "id": "2094865572",
+            "slug": "smite-2",
+            "ends_at": "2026-11-22T02:59:59Z"
+        },
+        {
+            "name": "Night Crew",
+            "id": "977181783",
+            "slug": "night-crew",
+            "ends_at": null
+        },
+        {
+            "name": "Metaphor: ReFantazio",
+            "id": "494806",
+            "slug": "metaphor-refantazio",
+            "ends_at": null
+        },
+        {
+            "name": "Kakele Online - MMORPG",
+            "id": "902050890",
+            "slug": "kakele-online-mmorpg",
+            "ends_at": null
+        },
+        {
+            "name": "Mobile Dungeon",
+            "id": "383199964",
+            "slug": "mobile-dungeon",
+            "ends_at": null
+        },
+        {
+            "name": "GunZ: The Duel",
+            "id": "513567",
+            "slug": "gunz-the-duel",
+            "ends_at": null
+        },
+        {
+            "name": "Pokémon Trading Card Game Live",
+            "id": "155409827",
+            "slug": "pokemon-trading-card-game-live",
+            "ends_at": null
+        },
+        {
+            "name": "Out of the Park Baseball 27",
+            "id": "2099590881",
+            "slug": "out-of-the-park-baseball-27",
+            "ends_at": "2026-11-22T02:59:59Z"
+        },
+        {
+            "name": "DOOM: The Dark Ages",
+            "id": "936822813",
+            "slug": "doom-the-dark-ages",
+            "ends_at": null
+        },
+        {
+            "name": "MARVEL Strike Force",
+            "id": "504651",
+            "slug": "marvel-strike-force",
+            "ends_at": null
+        },
+        {
+            "name": "Mahjong Soul",
+            "id": "512708",
+            "slug": "mahjong-soul",
+            "ends_at": null
+        },
+        {
+            "name": "Mistfall Hunter",
+            "id": "852009328",
+            "slug": "mistfall-hunter",
+            "ends_at": null
+        },
+        {
+            "name": "Ravendawn",
+            "id": "262400435",
+            "slug": "ravendawn",
+            "ends_at": null
+        },
+        {
+            "name": "Splinterlands",
+            "id": "589569308",
+            "slug": "splinterlands",
+            "ends_at": null
+        },
+        {
+            "name": "The First Descendant",
+            "id": "2104758320",
+            "slug": "the-first-descendant",
+            "ends_at": null
+        },
+        {
+            "name": "EVE Online",
+            "id": "13263",
+            "slug": "eve-online",
+            "ends_at": null
+        },
+        {
+            "name": "Old School RuneScape",
+            "id": "459931",
+            "slug": "old-school-runescape",
+            "ends_at": null
+        },
+        {
+            "name": "Disney Dreamlight Valley",
+            "id": "1515862749",
+            "slug": "disney-dreamlight-valley",
+            "ends_at": null
+        },
+        {
+            "name": "World of Tanks: HEAT",
+            "id": "767133634",
+            "slug": "world-of-tanks-heat",
+            "ends_at": null
+        },
+        {
+            "name": "World of Warships",
+            "id": "32502",
+            "slug": "world-of-warships",
+            "ends_at": null
+        },
+        {
+            "name": "Once Human",
+            "id": "1441208453",
+            "slug": "once-human",
+            "ends_at": null
+        },
+        {
+            "name": "UFL",
+            "id": "1471416868",
+            "slug": "ufl",
+            "ends_at": null
+        },
+        {
+            "name": "War Thunder",
+            "id": "66366",
+            "slug": "war-thunder",
+            "ends_at": null
+        },
+        {
+            "name": "Shakes and Fidget",
+            "id": "510389",
+            "slug": "shakes-and-fidget",
+            "ends_at": null
+        },
+        {
+            "name": "Madden NFL 27",
+            "id": "670138298",
+            "slug": "madden-nfl-27",
+            "ends_at": null
+        },
+        {
+            "name": "The Quinfall",
+            "id": "2128139746",
+            "slug": "the-quinfall",
+            "ends_at": "2026-11-21T02:59:59Z"
+        },
+        {
+            "name": "Sonic Rumble Party",
+            "id": "1814419969",
+            "slug": "sonic-rumble",
+            "ends_at": null
+        },
+        {
+            "name": "Albion Online",
+            "id": "417528",
+            "slug": "albion-online",
+            "ends_at": "2026-11-22T02:59:59Z"
+        },
+        {
+            "name": "Fishing Planet",
+            "id": "491117",
+            "slug": "fishing-planet",
+            "ends_at": null
+        },
+        {
+            "name": "Pokémon Trading Card Game",
+            "id": "9618",
+            "slug": "pokemon-trading-card-game",
+            "ends_at": null
+        },
+        {
+            "name": "Pokémon GO",
+            "id": "490655",
+            "slug": "pokemon-go",
+            "ends_at": null
+        },
+        {
+            "name": "Pokémon Champions",
+            "id": "1931693784",
+            "slug": "pokemon-champions",
+            "ends_at": null
+        },
+        {
+            "name": "Black Desert",
+            "id": "386821",
+            "slug": "black-desert",
+            "ends_at": "2026-11-22T02:59:59Z"
+        },
+        {
+            "name": "Rocket League",
+            "id": "30921",
+            "slug": "rocket-league",
+            "ends_at": null
+        },
+        {
+            "name": "Escape from Tarkov",
+            "id": "491931",
+            "slug": "escape-from-tarkov",
+            "ends_at": "2026-11-22T02:59:59Z"
+        },
+        {
+            "name": "Caliber",
+            "id": "514013",
+            "slug": "caliber",
+            "ends_at": null
+        },
+        {
+            "name": "Mir Korabley",
+            "id": "2133072147",
+            "slug": "mir-korabley",
+            "ends_at": null
+        },
+        {
+            "name": "RavenQuest",
+            "id": "608663369",
+            "slug": "ravenquest",
+            "ends_at": null
+        },
+        {
+            "name": "Poco Loco",
+            "id": "926558106",
+            "slug": "poco-loco",
+            "ends_at": null
+        },
+        {
+            "name": "World of Tanks",
+            "id": "27546",
+            "slug": "world-of-tanks",
+            "ends_at": null
+        },
+        {
+            "name": "MARVEL Contest of Champions",
+            "id": "461221",
+            "slug": "marvel-contest-of-champions",
+            "ends_at": null
+        },
+        {
+            "name": "Marbles on Stream",
+            "id": "509511",
+            "slug": "marbles-on-stream",
+            "ends_at": null
+        },
+        {
+            "name": "Rise Online",
+            "id": "516588",
+            "slug": "rise-online",
+            "ends_at": "2026-11-22T02:59:59Z"
+        },
+        {
+            "name": "Stonestorm",
+            "id": "1682785652",
+            "slug": "stonestorm",
+            "ends_at": null
+        },
+        {
+            "name": "EA Sports College Football 27",
+            "id": "1678532194",
+            "slug": "ea-sports-college-football-27",
+            "ends_at": null
+        },
+        {
+            "name": "Coryphaeus Championships",
+            "id": "707002701",
+            "slug": "coryphaeus-championships",
+            "ends_at": "2026-11-21T02:59:59Z"
+        },
+        {
+            "name": "Eternal Return",
+            "id": "512864",
+            "slug": "eternal-return",
+            "ends_at": "2026-11-22T02:59:59Z"
+        }
+    ]
+}

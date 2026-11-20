@@ -108,6 +108,8 @@ CACHE_DB = Path(CACHE_PATH, "mapping.json")
 COOKIES_PATH = Path(WORKING_DIR, "cookies.jar")
 SETTINGS_PATH = Path(WORKING_DIR, "settings.json")
 DROPS_GAMES_PATH = Path(WORKING_DIR, "drops_games.json")
+# bundled with the app: games with campaigns on a given day, the last-resort fallback
+KNOWN_DROPS_GAMES_PATH = _resource_path("known_drops_games.json")
 # Typing
 JsonType = Dict[str, Any]
 URLType = NewType("URLType", str)
