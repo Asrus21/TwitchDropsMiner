@@ -52,9 +52,12 @@
 >   vincular a conta do jogo. As que precisam de vínculo aparecem na janela com o link.
 > - **Diagnóstico:** rode o app uma vez com `--discover-debug` (liga o `--log` sozinho).
 >   Depois do login, ele testa cada forma de pedir as campanhas com cada cliente da Twitch
->   e grava uma linha `Discover debug:` por combinação no `log.txt` (operação, cliente,
->   status HTTP, se veio lista e quantas campanhas). Nenhum token, cookie ou cabeçalho é
->   gravado. São cerca de 30 requisições, uma vez só.
+>   e escreve uma linha `Discover debug:` por combinação (operação, cliente, status HTTP, se
+>   veio lista e quantas campanhas) na janela principal, no `log.txt` e no arquivo
+>   `discover_debug.txt`, ao lado do app. Nenhum token, cookie ou cabeçalho é gravado. São
+>   cerca de 30 requisições, uma vez só.
+> - Se houver campanhas e nada for minerado, a janela diz o motivo (por exemplo, Priority
+>   mode em "Priority list only" com a lista vazia).
 > - Vincule sua conta da Twitch às contas dos jogos na
 >   [página de campanhas](https://www.twitch.tv/drops/campaigns).
 >
