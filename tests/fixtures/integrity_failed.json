@@ -1,0 +1,20 @@
+{
+ "errors": [
+  {
+   "message": "failed integrity check",
+   "path": [
+    "currentUser",
+    "dropCampaigns"
+   ]
+  }
+ ],
+ "data": {
+  "currentUser": {
+   "dropCampaigns": null
+  }
+ },
+ "extensions": {
+  "durationMilliseconds": 5,
+  "operationName": "ViewerDropsDashboard"
+ }
+}

@@ -170,5 +170,14 @@
         "open_page": "Abrir a página de download",
         "manual": "Esta cópia não se atualiza sozinha (não é o executável do Windows). Baixe a versão nova na página de releases.",
         "installing": "Instalando a atualização, o app vai abrir de novo..."
+    },
+    "discovery": {
+        "summary": "Campanhas ({source}): {total} encontradas, {mineable} dá para minerar, {need_link} precisam vincular a conta do jogo",
+        "waiting": "Aguardando stream ao vivo: {games}",
+        "need_link": "Vincule sua conta para minerar {game}: {url}",
+        "official": "lista oficial",
+        "scan": "varredura dos canais ao vivo",
+        "snapshot": "lista de jogos salva",
+        "auto": "automático"
     }
 }

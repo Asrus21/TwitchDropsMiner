@@ -11,11 +11,19 @@
 >    funcionou em `settings.json` (`client_type`). Logins antigos que ainda são válidos
 >    continuam funcionando, sem precisar logar de novo.
 > 2. **Campanhas** — a lista de campanhas (`ViewerDropsDashboard`) deixou de responder
->    para os clientes que o app consegue usar. Agora o app faz uma **varredura**: lista
->    todos os streams ao vivo com drops ativados na Twitch (em duas passadas), e pergunta
->    aos 3 canais mais assistidos de cada jogo quais drops estão disponíveis para a sua
->    conta. Os jogos encontrados com drops ficam salvos em `drops_games.json` e são
->    procurados de novo nas próximas varreduras. O resultado é reaproveitado por 30 minutos.
+>    para os clientes que o app consegue usar. O app agora busca as campanhas em três
+>    fontes, nesta ordem (configurável em `campaign_source`, veja abaixo):
+>    - **lista oficial** — a mesma da página twitch.tv/drops/campaigns. O app sempre pede,
+>      primeiro como o site pede e depois de outra forma. Quando a Twitch responde, essa
+>      lista vale sobre as outras fontes;
+>    - **varredura** — lista os streams ao vivo com drops ativados (em duas passadas) e
+>      pergunta aos 3 canais mais assistidos de cada jogo quais drops estão disponíveis
+>      para a sua conta. Os jogos com drops ficam salvos em `drops_games.json` e são
+>      procurados de novo nas próximas vezes;
+>    - **lista salva** (`known_drops_games.json`) — os jogos que tinham campanha em
+>      20/11/2026, usada só se as duas primeiras não acharem nada.
+>
+>    O resultado é reaproveitado por 30 minutos; o botão **Reload** busca de novo na hora.
 > 3. **Progresso** — o progresso passou a contar só com a "visualização" da playlist
 >    do stream (já incluído desta versão em diante).
 >
@@ -38,13 +46,23 @@
 >   **Settings**.
 > - Na aba **Settings**, adicione à lista de prioridade os jogos que você quer minerar
 >   e clique em **Reload**. Para minerar tudo o que for possível, mude o **Priority Mode**.
-> - Com `--log`, a linha `Campaign discovery:` no `log.txt` mostra quantas campanhas
->   foram encontradas, em quantos canais e jogos.
+> - Com `--log`, a linha `Campaign discovery:` no `log.txt` mostra a fonte usada
+>   (`official`, `scan` ou `snapshot`), o total de campanhas, quantas dá para minerar,
+>   quantas estão sem stream ao vivo, quantas encerradas foram ignoradas e quantas precisam
+>   vincular a conta do jogo. As que precisam de vínculo aparecem na janela com o link.
+> - **Diagnóstico:** rode o app uma vez com `--discover-debug` (liga o `--log` sozinho).
+>   Depois do login, ele testa cada forma de pedir as campanhas com cada cliente da Twitch
+>   e grava uma linha `Discover debug:` por combinação no `log.txt` (operação, cliente,
+>   status HTTP, se veio lista e quantas campanhas). Nenhum token, cookie ou cabeçalho é
+>   gravado. São cerca de 30 requisições, uma vez só.
 > - Vincule sua conta da Twitch às contas dos jogos na
 >   [página de campanhas](https://www.twitch.tv/drops/campaigns).
 >
-> Novas opções em `settings.json`: `client_type` (padrão `SMARTBOX`) e
-> `campaign_discovery` (padrão `true`).
+> Opções em `settings.json`: `client_type` (padrão `SMARTBOX`), `campaign_discovery`
+> (padrão `true`), `check_updates` (padrão `true`) e `campaign_source` — `auto` (padrão:
+> lista oficial, depois varredura, depois lista salva), `official`, `scan` ou `snapshot`
+> (usa só aquela fonte). Instalações novas começam com a prioridade "termina antes, vem
+> antes" (`priority_mode`).
 
 This application allows you to AFK mine timed Twitch drops, without having to worry about switching channels when the one you were watching goes offline, claiming the drops, or even receiving the stream data itself. This helps you save on bandwidth and hassle.
 

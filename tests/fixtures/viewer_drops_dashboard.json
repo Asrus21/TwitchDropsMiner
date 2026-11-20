@@ -1,0 +1,145 @@
+{
+ "data": {
+  "currentUser": {
+   "id": "0",
+   "dropCampaigns": [
+    {
+     "id": "c-warzone",
+     "name": "Warzone Drops",
+     "status": "ACTIVE",
+     "startAt": "2026-11-10T00:00:00Z",
+     "endAt": "2026-11-21T02:59:59Z",
+     "accountLinkURL": "",
+     "detailsURL": "https://www.twitch.tv/drops/campaigns?dropID=c-warzone",
+     "game": {
+      "id": "512710",
+      "name": "Call of Duty: Warzone",
+      "displayName": "Call of Duty: Warzone",
+      "slug": "",
+      "boxArtURL": ""
+     },
+     "self": {
+      "isAccountConnected": true
+     },
+     "__typename": "DropCampaign"
+    },
+    {
+     "id": "c-smite",
+     "name": "SMITE 2 Drops",
+     "status": "ACTIVE",
+     "startAt": "2026-11-01T00:00:00Z",
+     "endAt": "2026-11-22T02:59:59Z",
+     "accountLinkURL": "",
+     "detailsURL": "https://www.twitch.tv/drops/campaigns?dropID=c-smite",
+     "game": {
+      "id": "2094865572",
+      "name": "SMITE 2",
+      "displayName": "SMITE 2",
+      "slug": "",
+      "boxArtURL": ""
+     },
+     "self": {
+      "isAccountConnected": true
+     },
+     "__typename": "DropCampaign"
+    },
+    {
+     "id": "c-albion",
+     "name": "Albion Drops",
+     "status": "ACTIVE",
+     "startAt": "2026-11-01T00:00:00Z",
+     "endAt": "2026-11-22T02:59:59Z",
+     "accountLinkURL": "https://example.invalid/link-albion",
+     "detailsURL": "https://www.twitch.tv/drops/campaigns?dropID=c-albion",
+     "game": {
+      "id": "417528",
+      "name": "Albion Online",
+      "displayName": "Albion Online",
+      "slug": "",
+      "boxArtURL": ""
+     },
+     "self": {
+      "isAccountConnected": false
+     },
+     "__typename": "DropCampaign"
+    },
+    {
+     "id": "c-lol",
+     "name": "League Drops",
+     "status": "ACTIVE",
+     "startAt": "2026-11-01T00:00:00Z",
+     "endAt": "2026-12-01T00:00:00Z",
+     "accountLinkURL": "",
+     "detailsURL": "https://www.twitch.tv/drops/campaigns?dropID=c-lol",
+     "game": {
+      "id": "21779",
+      "name": "League of Legends",
+      "displayName": "League of Legends",
+      "slug": "",
+      "boxArtURL": ""
+     },
+     "self": {
+      "isAccountConnected": true
+     },
+     "__typename": "DropCampaign"
+    },
+    {
+     "id": "c-old",
+     "name": "Old Drops",
+     "status": "EXPIRED",
+     "startAt": "2026-10-01T00:00:00Z",
+     "endAt": "2026-10-31T00:00:00Z",
+     "accountLinkURL": "",
+     "detailsURL": "https://www.twitch.tv/drops/campaigns?dropID=c-old",
+     "game": {
+      "id": "1",
+      "name": "Old Game",
+      "displayName": "Old Game",
+      "slug": "",
+      "boxArtURL": ""
+     },
+     "self": {
+      "isAccountConnected": true
+     },
+     "__typename": "DropCampaign"
+    },
+    {
+     "id": "c-stale",
+     "name": "Stale Drops",
+     "status": "ACTIVE",
+     "startAt": "2026-10-01T00:00:00Z",
+     "endAt": "2026-11-19T00:00:00Z",
+     "accountLinkURL": "",
+     "detailsURL": "https://www.twitch.tv/drops/campaigns?dropID=c-stale",
+     "game": {
+      "id": "2",
+      "name": "Stale Game",
+      "displayName": "Stale Game",
+      "slug": "",
+      "boxArtURL": ""
+     },
+     "self": {
+      "isAccountConnected": true
+     },
+     "__typename": "DropCampaign"
+    },
+    {
+     "id": "r-weird",
+     "name": "Reward in the wrong list",
+     "__typename": "RewardCampaign"
+    }
+   ],
+   "rewardCampaignsAvailableToUser": [
+    {
+     "id": "r-gtavi",
+     "name": "GTAVI Launch Celebration"
+    }
+   ],
+   "__typename": "User"
+  }
+ },
+ "extensions": {
+  "durationMilliseconds": 10,
+  "operationName": "ViewerDropsDashboard"
+ }
+}

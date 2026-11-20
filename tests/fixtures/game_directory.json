@@ -1,0 +1,166 @@
+[
+ {
+  "data": {
+   "game": {
+    "id": "21779",
+    "name": "League of Legends",
+    "displayName": "League of Legends",
+    "streams": {
+     "banners": null,
+     "edges": [
+      {
+       "cursor": "eyJzIjo1Mi4xODg2NDY5NzczNDU2MSwiZCI6ZmFsc2UsInQiOnRydWV9",
+       "node": {
+        "id": "319292030951",
+        "title": "stream",
+        "viewersCount": 52,
+        "previewImageURL": null,
+        "verticalPreviewImageURL": "https://static-cdn.jtvnw.net/previews-ttv/live_user_xnotrixx-360x640.jpg",
+        "height": 1080,
+        "width": 1920,
+        "isDualFormat": false,
+        "broadcaster": {
+         "id": "900001",
+         "login": "canal1",
+         "displayName": "Canal1",
+         "__typename": "User"
+        },
+        "freeformTags": null,
+        "curatedTags": null,
+        "type": "live",
+        "game": {
+         "id": "21779",
+         "boxArtURL": "https://static-cdn.jtvnw.net/ttv-boxart/21779-40x56.jpg",
+         "name": "League of Legends",
+         "displayName": "League of Legends",
+         "slug": "league-of-legends",
+         "__typename": "Game"
+        },
+        "previewThumbnailProperties": {
+         "blurReason": "BLUR_NOT_REQUIRED",
+         "__typename": "PreviewThumbnailProperties"
+        },
+        "contentClassificationLabels": [],
+        "__typename": "Stream"
+       },
+       "trackingID": null,
+       "__typename": "StreamEdge"
+      },
+      {
+       "cursor": "eyJzIjo0NS45NzgwMTEzOTc2Mzk3NTQsImQiOmZhbHNlLCJ0Ijp0cnVlfQ==",
+       "node": {
+        "id": "319479081830",
+        "title": "stream",
+        "viewersCount": 45,
+        "previewImageURL": null,
+        "verticalPreviewImageURL": "https://static-cdn.jtvnw.net/previews-ttv/live_user_bellnoire-360x640.jpg",
+        "height": 1080,
+        "width": 1920,
+        "isDualFormat": true,
+        "broadcaster": {
+         "id": "900002",
+         "login": "canal2",
+         "displayName": "Canal2",
+         "__typename": "User"
+        },
+        "freeformTags": null,
+        "curatedTags": null,
+        "type": "live",
+        "game": {
+         "id": "21779",
+         "boxArtURL": "https://static-cdn.jtvnw.net/ttv-boxart/21779-40x56.jpg",
+         "name": "League of Legends",
+         "displayName": "League of Legends",
+         "slug": "league-of-legends",
+         "__typename": "Game"
+        },
+        "previewThumbnailProperties": {
+         "blurReason": "BLUR_NOT_REQUIRED",
+         "__typename": "PreviewThumbnailProperties"
+        },
+        "contentClassificationLabels": [],
+        "__typename": "Stream"
+       },
+       "trackingID": null,
+       "__typename": "StreamEdge"
+      },
+      {
+       "cursor": "eyJzIjo0MC43NzE5NTEwODA5NDUzMSwiZCI6ZmFsc2UsInQiOnRydWV9",
+       "node": {
+        "id": "319674465908",
+        "title": "stream",
+        "viewersCount": 40,
+        "previewImageURL": null,
+        "verticalPreviewImageURL": "https://static-cdn.jtvnw.net/previews-ttv/live_user_kuropii_-360x640.jpg",
+        "height": 1080,
+        "width": 1920,
+        "isDualFormat": false,
+        "broadcaster": {
+         "id": "900003",
+         "login": "canal3",
+         "displayName": "Canal3",
+         "__typename": "User"
+        },
+        "freeformTags": null,
+        "curatedTags": null,
+        "type": "live",
+        "game": {
+         "id": "21779",
+         "boxArtURL": "https://static-cdn.jtvnw.net/ttv-boxart/21779-40x56.jpg",
+         "name": "League of Legends",
+         "displayName": "League of Legends",
+         "slug": "league-of-legends",
+         "__typename": "Game"
+        },
+        "previewThumbnailProperties": {
+         "blurReason": "BLUR_NOT_REQUIRED",
+         "__typename": "PreviewThumbnailProperties"
+        },
+        "contentClassificationLabels": [
+         {
+          "id": "ProfanityVulgarity",
+          "__typename": "ContentClassificationLabel"
+         },
+         {
+          "id": "ViolentGraphic",
+          "__typename": "ContentClassificationLabel"
+         }
+        ],
+        "__typename": "Stream"
+       },
+       "trackingID": null,
+       "__typename": "StreamEdge"
+      }
+     ],
+     "pageInfo": {
+      "hasNextPage": true,
+      "__typename": "PageInfo"
+     },
+     "__typename": "StreamConnection"
+    },
+    "__typename": "Game"
+   }
+  },
+  "extensions": {
+   "durationMilliseconds": 116,
+   "operationName": "DirectoryPage_Game"
+  }
+ },
+ {
+  "errors": [
+   {
+    "message": "service error",
+    "path": [
+     "game"
+    ]
+   }
+  ],
+  "data": {
+   "game": null
+  },
+  "extensions": {
+   "durationMilliseconds": 113,
+   "operationName": "DirectoryPage_Game"
+  }
+ }
+]

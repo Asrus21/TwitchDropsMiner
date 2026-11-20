@@ -241,6 +241,16 @@ class UpdateMessages(TypedDict):
     installing: str
 
 
+class DiscoveryMessages(TypedDict):
+    summary: str
+    waiting: str
+    need_link: str
+    official: str
+    scan: str
+    snapshot: str
+    auto: str
+
+
 class Translation(TypedDict):
     language_name: NotRequired[str]
     english_name: str
@@ -249,6 +259,7 @@ class Translation(TypedDict):
     error: ErrorMessages
     gui: GUIMessages
     update: UpdateMessages
+    discovery: DiscoveryMessages
 
 
 default_translation: Translation = {
@@ -477,6 +488,18 @@ default_translation: Translation = {
         "open_page": "Open the download page",
         "manual": "This copy can't update itself (it isn't the Windows executable). Download the new version from the releases page.",
         "installing": "Installing the update, the app will reopen...",
+    },
+    "discovery": {
+        "summary": (
+            "Campaigns ({source}): {total} found, {mineable} can be mined, "
+            "{need_link} need the game account linked"
+        ),
+        "waiting": "Waiting for a live stream: {games}",
+        "need_link": "Link your account to mine {game}: {url}",
+        "official": "official list",
+        "scan": "live channel scan",
+        "snapshot": "saved game list",
+        "auto": "automatic",
     }
 }
 

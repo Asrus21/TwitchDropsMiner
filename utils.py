@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 import re
+import unicodedata
 import sys
 import json
 import random
@@ -446,8 +447,11 @@ class Game:
         """
         Converts the game name into a slug, useable for the GQL API.
         """
+        # drop accents the way Twitch does ("Pokémon GO" -> "pokemon-go")
+        name = unicodedata.normalize("NFKD", self.name)
+        name = "".join(char for char in name if not unicodedata.combining(char))
         # remove specific characters
-        slug_text = re.sub(r'\'', '', self.name.lower())
+        slug_text = re.sub(r'\'', '', name.lower())
         # remove non alpha-numeric characters
         slug_text = re.sub(r'\W+', '-', slug_text)
         # strip and collapse dashes

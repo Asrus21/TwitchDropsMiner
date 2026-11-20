@@ -1238,9 +1238,8 @@ class InventoryOverview:
         self._cache: ImageCache = manager._cache
         self._settings: Settings = manager._twitch.settings
         self._filters = {
-            "not_linked": IntVar(
-                master, self._settings.priority_mode is PriorityMode.PRIORITY_ONLY
-            ),
+            # campaigns that need the game account linked are always listed, with the link
+            "not_linked": IntVar(master, 1),
             "upcoming": IntVar(master, 1),
             "expired": IntVar(master, 0),
             "excluded": IntVar(master, 0),
@@ -1842,7 +1841,8 @@ class SettingsPanel:
         ttk.Button(
             reload_frame,
             text=_("gui", "settings", "reload"),
-            command=self._manager._twitch.state_change(State.INVENTORY_FETCH),
+            # Reload skips the campaign caches (see Twitch.reload)
+            command=self._manager._twitch.reload,
         ).grid(column=1, row=0)
 
     def clear_selection(self) -> None:
