@@ -135,3 +135,13 @@ def test_fixtures_have_no_secrets():
         text = path.read_text(encoding="utf8").lower()
         for word in ("oauth", "authorization", "auth-token", "client-integrity", "cookie"):
             assert word not in text, f"{path.name} mentions {word}"
+
+
+def test_game_slugs_drop_accents_like_twitch():
+    from utils import Game
+
+    assert Game({"id": 1, "name": "Pokémon GO"}).slug == "pokemon-go"
+    assert Game({"id": 1, "name": "Captain's Call"}).slug == "captains-call"
+    assert Game({"id": 1, "name": "NARAKA: BLADEPOINT"}).slug == "naraka-bladepoint"
+    # Twitch's own slug, when known, wins
+    assert Game({"id": 1, "name": "Overwatch", "slug": "overwatch-2"}).slug == "overwatch-2"
