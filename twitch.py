@@ -19,6 +19,7 @@ from translate import _
 from gui import GUIManager
 from channel import Channel
 from websocket import WebsocketPool
+from discover_debug import run_discover_debug
 from campaign_sources import (
     CAMPAIGN_SOURCES,
     OFFICIAL_RAW_QUERY,
@@ -578,6 +579,7 @@ class Twitch:
         self._official_cache: tuple[float, list[JsonType], list[str], str] | None = None
         # set by the Reload button: the next inventory fetch skips the caches
         self._force_discovery: bool = False
+        self._discover_debug_done: bool = False
 
     def set_client_type(self, name: str) -> None:
         """
@@ -758,6 +760,12 @@ class Twitch:
         """
         self.gui.start()
         auth_state = await self.get_auth()
+        if self.settings.discover_debug and not self._discover_debug_done:
+            self._discover_debug_done = True
+            try:
+                await run_discover_debug(self)
+            except MinerException as exc:
+                logger.warning(f"Discover debug failed: {exc}")
         await self.websocket.start()
         # NOTE: watch task is explicitly restarted on each new run
         if self._watching_task is not None:

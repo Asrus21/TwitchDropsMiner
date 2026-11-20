@@ -69,6 +69,7 @@ if __name__ == "__main__":
         log: bool
         tray: bool
         dump: bool
+        discover_debug: bool = False
 
         # TODO: replace int with union of literal values once typeshed updates
         @property
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     parser.add_argument("--tray", action="store_true")
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--dump", action="store_true")
+    # tests which Twitch operations give the campaigns list, with each client (see discover_debug.py)
+    parser.add_argument("--discover-debug", dest="discover_debug", action="store_true")
     # undocumented debug args
     parser.add_argument(
         "--debug-ws", dest="_debug_ws", action="store_true", help=argparse.SUPPRESS
@@ -121,6 +124,9 @@ if __name__ == "__main__":
         "--debug-gql", dest="_debug_gql", action="store_true", help=argparse.SUPPRESS
     )
     args = parser.parse_args(namespace=ParsedArgs())
+    if args.discover_debug:
+        # its results go to log.txt
+        args.log = True
     # load settings
     try:
         settings = Settings(args)
