@@ -41,6 +41,14 @@ jobs:
             exit 1
           fi
 
+      - name: Run the tests
+        env:
+          # no system tray (or display) needed to import the app's modules
+          PYSTRAY_BACKEND: dummy
+        run: |
+          python -m pip install "aiohttp>=3.9,<4.0" Pillow pystray truststore pytest
+          python -m pytest -q tests
+
   # Decides whether this run publishes a release: a push to master (or a manual run)
   # whose version.py version has no release yet, and a CHANGELOG.md section for it.
   version:
