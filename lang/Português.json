@@ -178,6 +178,16 @@
         "official": "lista oficial",
         "scan": "varredura dos canais ao vivo",
         "snapshot": "lista de jogos salva",
-        "auto": "automático"
+        "auto": "automático",
+        "nothing_picked": "Há campanhas, mas nenhuma foi escolhida para minerar: {details}.",
+        "hint_empty_priority": "O Priority mode está em \"Priority list only\" e a lista está vazia: adicione jogos à lista na aba Settings, ou troque o Priority mode para minerar tudo o que der.",
+        "hint_priority_only": "O Priority mode está em \"Priority list only\": só os jogos da lista são minerados. Adicione jogos à lista ou troque o Priority mode.",
+        "reasons": {
+            "excluded": "{count} excluídas nas configurações",
+            "not_in_priority_list": "{count} fora da lista de prioridade",
+            "account_not_linked": "{count} precisam vincular a conta do jogo",
+            "badges_and_emotes_off": "{count} só dão emblemas ou emotes (desligado)",
+            "nothing_to_earn_in_the_next_hour": "{count} sem nada para ganhar na próxima hora"
+        }
     }
 }

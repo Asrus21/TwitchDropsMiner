@@ -241,10 +241,22 @@ class UpdateMessages(TypedDict):
     installing: str
 
 
+class DiscoveryReasons(TypedDict):
+    excluded: str
+    not_in_priority_list: str
+    account_not_linked: str
+    badges_and_emotes_off: str
+    nothing_to_earn_in_the_next_hour: str
+
+
 class DiscoveryMessages(TypedDict):
     summary: str
     waiting: str
     need_link: str
+    nothing_picked: str
+    hint_empty_priority: str
+    hint_priority_only: str
+    reasons: DiscoveryReasons
     official: str
     scan: str
     snapshot: str
@@ -496,6 +508,22 @@ default_translation: Translation = {
         ),
         "waiting": "Waiting for a live stream: {games}",
         "need_link": "Link your account to mine {game}: {url}",
+        "nothing_picked": "There are campaigns, but none was picked for mining: {details}.",
+        "hint_empty_priority": (
+            "Priority mode is \"Priority list only\" and the list is empty: add games to it "
+            "in the Settings tab, or change the Priority mode to mine everything you can."
+        ),
+        "hint_priority_only": (
+            "Priority mode is \"Priority list only\": only the listed games are mined. "
+            "Add games to the list, or change the Priority mode."
+        ),
+        "reasons": {
+            "excluded": "{count} excluded in the settings",
+            "not_in_priority_list": "{count} not in the priority list",
+            "account_not_linked": "{count} need the game account linked",
+            "badges_and_emotes_off": "{count} only give badges or emotes (turned off)",
+            "nothing_to_earn_in_the_next_hour": "{count} with nothing to earn in the next hour",
+        },
         "official": "official list",
         "scan": "live channel scan",
         "snapshot": "saved game list",
