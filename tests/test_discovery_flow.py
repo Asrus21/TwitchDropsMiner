@@ -17,7 +17,7 @@ from typing import Any
 import twitch as twitch_module
 from twitch import Twitch
 from exceptions import GQLException
-from constants import ClientType
+from constants import ClientType, PriorityMode
 from conftest import load_fixture
 
 
@@ -99,7 +99,10 @@ class FakeTwitch:
         return {"data": {"streams": {"edges": edges, "pageInfo": {"hasNextPage": False}}}}
 
 
-def make_app(tmp_path, monkeypatch, fake: FakeTwitch, *, source: str = "auto"):
+def make_app(
+    tmp_path, monkeypatch, fake: FakeTwitch, *, source: str = "auto",
+    priority_mode: PriorityMode = PriorityMode.ENDING_SOONEST,
+):
     monkeypatch.setattr(twitch_module, "DROPS_GAMES_PATH", tmp_path / "drops_games.json")
     snapshot = tmp_path / "known_drops_games.json"
     snapshot.write_text(json.dumps({
@@ -116,7 +119,8 @@ def make_app(tmp_path, monkeypatch, fake: FakeTwitch, *, source: str = "auto"):
 
     app.settings = SimpleNamespace(
         campaign_source=source, campaign_discovery=True, available_drops_check=True,
-        exclude=set(), priority=[], dump=False,
+        exclude=set(), priority=[], dump=False, priority_mode=priority_mode,
+        enable_badges_emotes=False,
     )
     app.gui = SimpleNamespace(
         status=SimpleNamespace(update=lambda *a: None),
@@ -245,3 +249,23 @@ def test_caches_and_reload(tmp_path, monkeypatch):
     third = fake.calls[len(first) + len(second):]
     assert "ViewerDropsDashboard" in third and "scan" in third
     assert app._force_discovery is False
+
+
+def test_mineable_count_follows_the_priority_mode(tmp_path, monkeypatch, caplog):
+    """
+    The 16.2.0 bug: "45 can be mined" while the miner picked nothing, because the count
+    didn't look at the Priority mode. Now both use the same rule.
+    """
+    caplog.set_level("INFO", logger="TwitchDrops")
+    fake = FakeTwitch(official="integrity")
+    # an old settings.json: "Priority list only", with the list empty
+    app = make_app(tmp_path, monkeypatch, fake, priority_mode=PriorityMode.PRIORITY_ONLY)
+    run(app)
+    line = discovery_line(caplog)
+    assert "mineable=0" in line and "not picked: not in priority list=2" in line
+    assert any("0 can be mined" in m for m in app.printed)
+    # the default mode mines them
+    app2 = make_app(tmp_path, monkeypatch, FakeTwitch(official="integrity"))
+    caplog.clear()
+    run(app2)
+    assert "mineable=2" in discovery_line(caplog)

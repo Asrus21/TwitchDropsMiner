@@ -8,6 +8,24 @@ aqui uma seção `## [X.Y.Z] - AAAA-MM-DD` no topo. Quando isso chega ao `master
 Actions gera o executável e publica o Release `vX.Y.Z` sozinho. Sem a seção no changelog, o
 build falha de propósito.
 
+## [16.2.1] - 2026-11-20
+
+Correções da 16.2.0.
+
+### Correções
+- **`log.txt` vazio:** sem a opção `-v`, as linhas de campanhas e do diagnóstico não iam para
+  o `log.txt`, que ficava com 0 bytes. Agora o `--log` sempre grava essas linhas.
+- **Diagnóstico (`--discover-debug`):** o resultado agora aparece na janela principal, uma
+  linha por teste, e também é salvo no arquivo `discover_debug.txt`, ao lado do app. Nada de
+  senha, token ou cookie vai para esses lugares.
+- **"Dá para minerar" sem minerar nada:** o resumo contava campanhas que o app depois não
+  escolhia, porque não olhava o Priority mode nem a lista de prioridade. Agora o número
+  segue a mesma regra do app. Quando há campanhas e nenhuma é escolhida, a janela explica o
+  motivo. Se o Priority mode estiver em "Priority list only" com a lista vazia (comum em
+  quem copiou o `settings.json` de uma versão antiga), o app avisa para adicionar jogos à
+  lista ou trocar o Priority mode.
+- O `log.txt` agora aceita nomes de jogos com qualquer caractere.
+
 ## [16.2.0] - 2026-11-20
 
 Esta versão tenta pegar a lista completa de campanhas, a mesma que aparece em

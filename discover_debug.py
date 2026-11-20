@@ -2,9 +2,11 @@
 The --discover-debug mode: which Twitch operations give the campaigns, with which client.
 
 Run once on the user's own machine (it needs their login): every candidate operation is
-asked with every known client, and one line per combination goes to log.txt with the
+asked with every known client, and one line per combination is written with the
 operation, the client, the HTTP status, whether a campaigns list came back and its size,
-and Twitch's error message. Tokens, cookies and request headers are never written.
+and Twitch's error message. The lines go to the main window, to log.txt (with --log, which
+--discover-debug turns on) and to discover_debug.txt next to the app, which is written and
+closed when the test ends. Tokens, cookies and request headers are never written.
 
 It makes about 25 requests, once, then the app carries on normally.
 """
@@ -13,20 +15,21 @@ from __future__ import annotations
 
 import json
 import asyncio
-import logging
 from time import monotonic
+from datetime import datetime, timezone
 from typing import Any, Callable, cast, TYPE_CHECKING
 
 import aiohttp
 
-from constants import GQL_QUERIES, ClientType
-from campaign_sources import OFFICIAL_RAW_QUERY, gql_error_text
+from version import __version__
+from constants import GQL_QUERIES, WORKING_DIR, ClientType
+from campaign_sources import OFFICIAL_RAW_QUERY, discovery_logger, gql_error_text
 
 if TYPE_CHECKING:
     from twitch import Twitch
 
 
-logger = logging.getLogger("TwitchDrops")
+RESULTS_PATH = WORKING_DIR / "discover_debug.txt"
 
 JsonType = dict[str, Any]
 
@@ -117,10 +120,12 @@ def _first_campaign_id(response: JsonType | None) -> str | None:
 async def run_discover_debug(twitch: Twitch) -> None:
     auth_state = await twitch.get_auth()
     current = twitch.client_type_name
-    logger.info(
+    started = (
         f"Discover debug: start (logged in with the {current} client; "
         "testing every operation with every known client)"
     )
+    discovery_logger.info(started)
+    twitch.print(started)
     # a live drops-enabled channel and a campaign ID, to test the per-item operations
     channel_id: str | None = None
     try:
@@ -132,12 +137,12 @@ async def run_discover_debug(twitch: Twitch) -> None:
         if edges:
             channel_id = str(edges[0]["node"]["broadcaster"]["id"])
     except Exception as exc:
-        logger.info(f"Discover debug: no live channel to test with ({type(exc).__name__})")
+        discovery_logger.info(f"Discover debug: no live channel to test with ({type(exc).__name__})")
     campaign_id: str | None = None
     try:
         campaign_id = _first_campaign_id(await twitch.gql_request(GQL_QUERIES["Inventory"]))
     except Exception as exc:
-        logger.info(f"Discover debug: no campaign to test with ({type(exc).__name__})")
+        discovery_logger.info(f"Discover debug: no campaign to test with ({type(exc).__name__})")
 
     rows: list[str] = []
     for client_name, client_info in ClientType.by_name().items():
@@ -170,10 +175,23 @@ async def run_discover_debug(twitch: Twitch) -> None:
                     f"count={count if count is not None else '-'} time={seconds:.1f}s"
                     + (f" errors={errors}" if errors else "")
                 )
+    # the main window and log.txt, one line per combination
     for row in rows:
-        logger.info(f"Discover debug: {row}")
-    logger.info("Discover debug: done")
-    twitch.print(
-        "Discover debug: done, the results are in log.txt (no tokens or headers are written there)"
-    )
+        twitch.print(f"Discover debug: {row}")
+        discovery_logger.info(f"Discover debug: {row}")
+    # and a file of its own, written and closed right away
+    header = [
+        f"Twitch Drops Miner {__version__} - discover debug - "
+        f"{datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S} UTC",
+        f"Logged in with the {current} client. No tokens, cookies or headers are written here.",
+        "",
+    ]
+    try:
+        with RESULTS_PATH.open("w", encoding="utf8") as file:
+            file.write("\n".join(header + rows) + "\n")
+        saved = f"Discover debug: done, {len(rows)} result(s) saved to {RESULTS_PATH}"
+    except OSError as exc:
+        saved = f"Discover debug: done, but {RESULTS_PATH} couldn't be written: {exc}"
+    discovery_logger.info(saved)
+    twitch.print(saved)
 

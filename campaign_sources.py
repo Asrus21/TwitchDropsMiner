@@ -24,6 +24,9 @@ from typing import Any, Iterable, Protocol, Sequence
 
 
 logger = logging.getLogger("TwitchDrops")
+# The discovery summary and the --discover-debug results. Kept at INFO whatever -v says,
+# so --log always records them (main.py sets it up).
+discovery_logger = logging.getLogger("TwitchDrops.discovery")
 
 JsonType = dict[str, Any]
 
@@ -179,8 +182,15 @@ class DiscoveryReport:
         self.waiting: list[str] = []  # games with campaigns and no live channel (yet)
         self.notes: list[str] = []
 
+        self.blocked: dict[str, int] = {}  # campaigns not picked for mining, by reason
+
     def count(self, campaigns: dict[str, JsonType], pending: dict[str, JsonType]) -> None:
-        """Counts the final campaigns, and the listed ones still without drops data."""
+        """
+        Counts the final campaigns, and the listed ones still without drops data.
+
+        This is only a first estimate of the mineable ones; set_selection gives the real
+        number, with the same rule the miner uses.
+        """
         self.total = len(campaigns) + len(pending)
         self.need_link = 0
         self.mineable = 0
@@ -191,6 +201,16 @@ class DiscoveryReport:
             if is_linked(campaign) and has_drops_left(campaign):
                 self.mineable += 1
 
+    def set_selection(self, blockers: Iterable[str | None]) -> None:
+        """The mineable count and the reasons for the rest, from selection_blocker."""
+        self.mineable = 0
+        self.blocked = {}
+        for reason in blockers:
+            if reason is None:
+                self.mineable += 1
+            else:
+                self.blocked[reason] = self.blocked.get(reason, 0) + 1
+
     def line(self) -> str:
         text = (
             f"Campaign discovery: source={self.source}, campaigns={self.total}, "
@@ -199,9 +219,63 @@ class DiscoveryReport:
         )
         if self.rewards:
             text += f", reward campaigns ignored={self.rewards}"
+        if self.blocked:
+            text += ", not picked: " + ", ".join(
+                f"{reason}={n}" for reason, n in sorted(self.blocked.items())
+            )
         if self.notes:
             text += ". " + "; ".join(self.notes)
         return text
+
+
+# why a campaign isn't picked for mining (see selection_blocker)
+BLOCK_EXCLUDED = "excluded"
+BLOCK_NOT_IN_PRIORITY = "not in priority list"
+BLOCK_NOT_LINKED = "account not linked"
+BLOCK_BADGES_OFF = "badges and emotes off"
+BLOCK_NOTHING_NOW = "nothing to earn in the next hour"
+
+
+class _Selectable(Protocol):
+    @property
+    def game(self) -> Any: ...
+
+    @property
+    def linked(self) -> bool: ...
+
+    @property
+    def has_badge_or_emote(self) -> bool: ...
+
+    def can_earn_within(self, stamp: datetime) -> bool: ...
+
+
+def selection_blocker(
+    campaign: _Selectable,
+    *,
+    priority: Sequence[str],
+    exclude: Iterable[str],
+    priority_only: bool,
+    badges_emotes: bool,
+    stamp: datetime,
+) -> str | None:
+    """
+    Why the campaign won't be picked for mining, or None when it will.
+
+    The mining choice (Twitch's GAMES_UPDATE) and the "can be mined" count both use this,
+    so the summary never promises what the miner then skips.
+    """
+    name: str = campaign.game.name
+    if name in exclude:
+        return BLOCK_EXCLUDED
+    if priority_only and name not in priority:
+        return BLOCK_NOT_IN_PRIORITY
+    if campaign.can_earn_within(stamp):
+        return None
+    if campaign.has_badge_or_emote and not badges_emotes:
+        return BLOCK_BADGES_OFF
+    if not campaign.linked:
+        return BLOCK_NOT_LINKED
+    return BLOCK_NOTHING_NOW
 
 
 class _Sortable(Protocol):

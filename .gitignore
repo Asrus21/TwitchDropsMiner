@@ -27,3 +27,4 @@ settings.json
 .DS_Store
 *.app
 /drops_games.json
+/discover_debug.txt

@@ -28,6 +28,9 @@ from campaign_sources import (
     SOURCE_SCAN,
     SOURCE_SNAPSHOT,
     DiscoveryReport,
+    BLOCK_NOT_IN_PRIORITY,
+    discovery_logger,
+    selection_blocker,
     SourceUnavailable,
     apply_official,
     drop_expired,
@@ -809,7 +812,6 @@ class Twitch:
                                 await drop.claim()
                 # figure out which games we want
                 self.wanted_games.clear()
-                exclude = self.settings.exclude
                 priority = self.settings.priority
                 priority_mode = self.settings.priority_mode
                 priority_only = priority_mode is PriorityMode.PRIORITY_ONLY
@@ -824,18 +826,18 @@ class Twitch:
                     priority,
                     ending_soonest=priority_mode is PriorityMode.ENDING_SOONEST,
                 )
+                blockers: list[str | None] = []
                 for campaign in sorted_campaigns:
                     game: Game = campaign.game
-                    if (
-                        game not in self.wanted_games  # isn't already there
-                        # and isn't excluded by list or priority mode
-                        and game.name not in exclude
-                        and (not priority_only or game.name in priority)
-                        # and can be progressed within the next hour
-                        and campaign.can_earn_within(next_hour)
-                    ):
+                    # not excluded, in the priority list when the mode asks for it,
+                    # and can be progressed within the next hour
+                    reason = self.selection_blocker(campaign, stamp=next_hour)
+                    blockers.append(reason)
+                    if reason is None and game not in self.wanted_games:
                         # non-excluded games with no priority are placed last, below priority ones
                         self.wanted_games.append(game)
+                if not self.wanted_games and sorted_campaigns:
+                    self._explain_nothing_picked(blockers, priority_only, priority)
                 full_cleanup = True
                 self.restart_watching()
                 self.change_state(State.CHANNELS_CLEANUP)
@@ -1599,12 +1601,12 @@ class Twitch:
             except (GQLException, SourceUnavailable) as exc:
                 errors.append(f"{label}: {exc}")
                 continue
-            logger.info(f"Official campaigns list ({label}): {len(listed)} campaign(s)")
+            discovery_logger.info(f"Official campaigns list ({label}): {len(listed)} campaign(s)")
             errors.clear()
             break
         error: str = "; ".join(errors)[:300]
         if error:
-            logger.info(f"Official campaigns list unavailable: {error}")
+            discovery_logger.info(f"Official campaigns list unavailable: {error}")
         self._official_cache = (now, deepcopy(listed), list(rewards), error)
         return listed, rewards, error
 
@@ -1658,6 +1660,47 @@ class Twitch:
             live_channels = {**live_channels, **found}
         report.waiting = sorted(
             game["name"] for game_id, game in games.items() if not live_channels.get(game_id)
+        )
+
+    def selection_blocker(
+        self, campaign: DropsCampaign, *, stamp: datetime | None = None
+    ) -> str | None:
+        """Why the campaign won't be mined with the current settings (None: it will be)."""
+        if stamp is None:
+            stamp = datetime.now(timezone.utc) + timedelta(hours=1)
+        return selection_blocker(
+            campaign,
+            priority=self.settings.priority,
+            exclude=self.settings.exclude,
+            priority_only=self.settings.priority_mode is PriorityMode.PRIORITY_ONLY,
+            badges_emotes=self.settings.enable_badges_emotes,
+            stamp=stamp,
+        )
+
+    def _explain_nothing_picked(
+        self, blockers: list[str | None], priority_only: bool, priority: list[str]
+    ) -> None:
+        """
+        There are campaigns but none got picked: say why in the main window (and the log),
+        instead of only "no active campaigns".
+        """
+        counts: dict[str, int] = {}
+        for reason in blockers:
+            if reason is not None:
+                counts[reason] = counts.get(reason, 0) + 1
+        details = ", ".join(
+            _("discovery", "reasons", reason.replace(" ", "_")).format(count=n)
+            for reason, n in sorted(counts.items(), key=lambda item: -item[1])
+        )
+        self.print(_("discovery", "nothing_picked").format(details=details))
+        if priority_only and counts.get(BLOCK_NOT_IN_PRIORITY):
+            hint_key = "hint_empty_priority" if not priority else "hint_priority_only"
+            self.print(_("discovery", hint_key))
+        discovery_logger.info(
+            "Nothing picked for mining: "
+            + ", ".join(f"{reason}={n}" for reason, n in sorted(counts.items()))
+            + f" (priority mode: {self.settings.priority_mode.name}, "
+            f"priority list: {len(priority)} game(s))"
         )
 
     def _report_to_user(
@@ -1797,8 +1840,6 @@ class Twitch:
         report.expired += expired
         report.count(inventory_data, pending)
         await self._report_waiting(report, inventory_data, pending, live_channels)
-        logger.info(report.line())
-        self._report_to_user(report, inventory_data, pending)
 
         if self.settings.dump:
             # dump the campaigns data to the dump file
@@ -1832,6 +1873,10 @@ class Twitch:
         campaigns.sort(key=lambda c: c.active, reverse=True)
         campaigns.sort(key=lambda c: c.upcoming and c.starts_at or c.ends_at)
         campaigns.sort(key=lambda c: c.eligible, reverse=True)
+        # the mineable count uses the very rule the miner picks games with
+        report.set_selection(self.selection_blocker(c) for c in campaigns)
+        discovery_logger.info(report.line())
+        self._report_to_user(report, inventory_data, pending)
 
         self._drops.clear()
         self.gui.inv.clear()
@@ -2329,7 +2374,7 @@ class Twitch:
         answered: int = sum(1 for campaigns_data in available.values() if campaigns_data)
         found_games: int = len({str(data["game"]["id"]) for data in discovered.values()})
         skipped_text: str = ", ".join(f"{reason}: {n}" for reason, n in sorted(skipped.items()))
-        logger.info(
+        discovery_logger.info(
             f"Drops scan ({label}): {len(discovered)} campaign(s) of {found_games} game(s) "
             f"found. Checked {len(game_channels)} game(s), asked {len(channel_info)} channel(s), "
             f"{len(available)} answered, {answered} with drops. "
