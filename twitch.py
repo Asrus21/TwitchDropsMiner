@@ -1660,7 +1660,12 @@ class Twitch:
             game["name"] for game_id, game in games.items() if not live_channels.get(game_id)
         )
 
-    def _report_to_user(self, report: DiscoveryReport, pending: dict[str, JsonType]) -> None:
+    def _report_to_user(
+        self,
+        report: DiscoveryReport,
+        campaigns: dict[str, JsonType],
+        pending: dict[str, JsonType],
+    ) -> None:
         """
         The discovery summary in the main window, with the campaigns that need the account
         linked to the game (and where to link it).
@@ -1675,11 +1680,16 @@ class Twitch:
         )
         if report.waiting:
             self.print(_("discovery", "waiting").format(games=", ".join(report.waiting)))
-        for campaign in pending.values():
+        # one line per game, whichever source the campaign came from
+        need_link: dict[str, str] = {}
+        for campaign in list(campaigns.values()) + list(pending.values()):
             if not is_linked(campaign):
                 game_name: str = self._game_entry(campaign.get("game") or {})["name"]
                 link: str = campaign.get("accountLinkURL") or campaign.get("detailsURL") or ""
-                self.print(_("discovery", "need_link").format(game=game_name, url=link))
+                if not need_link.get(game_name):
+                    need_link[game_name] = link
+        for game_name, link in sorted(need_link.items()):
+            self.print(_("discovery", "need_link").format(game=game_name, url=link))
 
     async def fetch_inventory(self) -> None:
         status_update = self.gui.status.update
@@ -1788,7 +1798,7 @@ class Twitch:
         report.count(inventory_data, pending)
         await self._report_waiting(report, inventory_data, pending, live_channels)
         logger.info(report.line())
-        self._report_to_user(report, pending)
+        self._report_to_user(report, inventory_data, pending)
 
         if self.settings.dump:
             # dump the campaigns data to the dump file
