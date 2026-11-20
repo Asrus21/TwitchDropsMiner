@@ -12,6 +12,7 @@ from typing import Any
 
 from twitch import _AuthState
 from constants import ClientType
+import discover_debug
 from discover_debug import run_discover_debug
 from conftest import load_fixture
 
@@ -82,8 +83,10 @@ def fake_twitch(sent: list[dict[str, Any]], printed: list[str]):
     return app
 
 
-def test_one_line_per_operation_and_client_without_secrets(caplog):
+def test_one_line_per_operation_and_client_without_secrets(caplog, tmp_path, monkeypatch):
     caplog.set_level("INFO", logger="TwitchDrops")
+    results = tmp_path / "discover_debug.txt"
+    monkeypatch.setattr(discover_debug, "RESULTS_PATH", results)
     sent: list[dict[str, Any]] = []
     printed: list[str] = []
     asyncio.run(run_discover_debug(fake_twitch(sent, printed)))
@@ -100,7 +103,16 @@ def test_one_line_per_operation_and_client_without_secrets(caplog):
     assert len(baseline) == 6 and all("client=SMARTBOX" in line for line in baseline)
     # the requests did carry the session, the log never does
     assert any(f"OAuth {SECRET_TOKEN}" == r["headers"].get("Authorization") for r in sent)
-    everything = "\n".join(r.getMessage() for r in caplog.records) + "\n".join(printed)
+    # every result also shows in the main window...
+    shown = [m for m in printed if m.startswith("Discover debug: op=")]
+    assert shown == [f"Discover debug: {line.split('Discover debug: ', 1)[1]}" for line in lines]
+    # ...and in a file of its own, already written and closed
+    saved = results.read_text(encoding="utf8").splitlines()
+    assert saved[0].startswith("Twitch Drops Miner ") and "discover debug" in saved[0]
+    assert len([row for row in saved if row.startswith("op=")]) == 30
+    assert str(results) in printed[-1] and "30 result(s)" in printed[-1]
+    everything = "\n".join(
+        [r.getMessage() for r in caplog.records] + printed + saved
+    )
     for secret in (SECRET_TOKEN, SECRET_SESSION, "zzdevicezz", "Authorization", "OAuth "):
         assert secret not in everything
-    assert printed and "log.txt" in printed[-1]

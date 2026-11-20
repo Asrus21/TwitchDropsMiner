@@ -24,6 +24,9 @@ from typing import Any, Iterable, Protocol, Sequence
 
 
 logger = logging.getLogger("TwitchDrops")
+# The discovery summary and the --discover-debug results. Kept at INFO whatever -v says,
+# so --log always records them (main.py sets it up).
+discovery_logger = logging.getLogger("TwitchDrops.discovery")
 
 JsonType = dict[str, Any]
 

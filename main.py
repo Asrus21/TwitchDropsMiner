@@ -25,11 +25,12 @@ if __name__ == "__main__":
     from translate import _
     from twitch import Twitch
     from updater import Updater, cleanup_leftovers
+    from logsetup import configure_logging
     from settings import Settings
     from version import __version__
     from exceptions import CaptchaRequired
     from utils import lock_file, resource_path, set_root_icon
-    from constants import LOGGING_LEVELS, SELF_PATH, FILE_FORMATTER, LOG_PATH, LOCK_PATH
+    from constants import LOGGING_LEVELS, SELF_PATH, LOG_PATH, LOCK_PATH
 
     if TYPE_CHECKING:
         from _typeshed import SupportsWrite
@@ -150,19 +151,13 @@ if __name__ == "__main__":
             # this language doesn't exist - stick to English
             pass
 
-        # handle logging stuff
-        if settings.logging_level > logging.DEBUG:
-            # redirect the root logger into a NullHandler, effectively ignoring all logging calls
-            # that aren't ours. This always runs, unless the main logging level is DEBUG or lower.
-            logging.getLogger().addHandler(logging.NullHandler())
-        logger = logging.getLogger("TwitchDrops")
-        logger.setLevel(settings.logging_level)
-        if settings.log:
-            handler = logging.FileHandler(LOG_PATH)
-            handler.setFormatter(FILE_FORMATTER)
-            logger.addHandler(handler)
-        logging.getLogger("TwitchDrops.gql").setLevel(settings.debug_gql)
-        logging.getLogger("TwitchDrops.websocket").setLevel(settings.debug_ws)
+        # handle logging stuff (see logsetup.py)
+        configure_logging(
+            settings.logging_level,
+            LOG_PATH if settings.log else None,
+            debug_gql=settings.debug_gql,
+            debug_ws=settings.debug_ws,
+        )
 
         exit_status = 0
         client = Twitch(settings)

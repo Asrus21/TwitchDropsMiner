@@ -28,6 +28,7 @@ from campaign_sources import (
     SOURCE_SCAN,
     SOURCE_SNAPSHOT,
     DiscoveryReport,
+    discovery_logger,
     SourceUnavailable,
     apply_official,
     drop_expired,
@@ -1599,12 +1600,12 @@ class Twitch:
             except (GQLException, SourceUnavailable) as exc:
                 errors.append(f"{label}: {exc}")
                 continue
-            logger.info(f"Official campaigns list ({label}): {len(listed)} campaign(s)")
+            discovery_logger.info(f"Official campaigns list ({label}): {len(listed)} campaign(s)")
             errors.clear()
             break
         error: str = "; ".join(errors)[:300]
         if error:
-            logger.info(f"Official campaigns list unavailable: {error}")
+            discovery_logger.info(f"Official campaigns list unavailable: {error}")
         self._official_cache = (now, deepcopy(listed), list(rewards), error)
         return listed, rewards, error
 
@@ -1797,7 +1798,7 @@ class Twitch:
         report.expired += expired
         report.count(inventory_data, pending)
         await self._report_waiting(report, inventory_data, pending, live_channels)
-        logger.info(report.line())
+        discovery_logger.info(report.line())
         self._report_to_user(report, inventory_data, pending)
 
         if self.settings.dump:
@@ -2329,7 +2330,7 @@ class Twitch:
         answered: int = sum(1 for campaigns_data in available.values() if campaigns_data)
         found_games: int = len({str(data["game"]["id"]) for data in discovered.values()})
         skipped_text: str = ", ".join(f"{reason}: {n}" for reason, n in sorted(skipped.items()))
-        logger.info(
+        discovery_logger.info(
             f"Drops scan ({label}): {len(discovered)} campaign(s) of {found_games} game(s) "
             f"found. Checked {len(game_channels)} game(s), asked {len(channel_info)} channel(s), "
             f"{len(available)} answered, {answered} with drops. "
